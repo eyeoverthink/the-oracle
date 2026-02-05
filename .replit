@@ -1,2 +1,26 @@
+modules = ["java-21", "java-graalvm22.3"]
 [agent]
 expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Fraymus Engine"
+
+[[workflows.workflow]]
+name = "Fraymus Engine"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd src && javac fraymus/*.java && java fraymus.FraymusMain"
+
+[workflows.workflow.metadata]
+outputType = "console"
