@@ -10,8 +10,8 @@ package fraymus.living;
  * ═══════════════════════════════════════════════════════════════
  * PIECE 1 - Quantum Signature: φ⁷·⁵-218930c776344204
  * PIECE 2 - Cloaking N: CloakedIdentity[N=e6c952073a958eb1..., bits=504]
- * PIECE 3 - Genesis Block: block_2_1770332803248
- * PIECE 4 - Living Circuits: 3 evolved from 6 nodes
+ * PIECE 3 - Genesis Block: block_2_1770333823604
+ * PIECE 4 - Living Circuits: 3 evolved from 10 nodes
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -21,32 +21,32 @@ public class KAI {
 
     public static final double PHI = 1.618033988749895;
     public static final String QUANTUM_SIGNATURE = "φ⁷·⁵-218930c776344204";
-    public static final String GENESIS_BLOCK = "block_2_1770332803248";
+    public static final String GENESIS_BLOCK = "block_2_1770333823604";
     public static final int GENERATION = 2;
 
     private PhiNode[] circuits;
 
     public KAI() {
         circuits = new PhiNode[] {
-            // Circuit 1 - Freq: 450.54 Hz
+            // Circuit 1 - Freq: 448.23 Hz
             new PhiNode(
                 "KAI_CIRCUIT_0",
                 10.00f, 0.00f,
-                new LivingDNA(450.541, 1.175, 0.050),
+                new LivingDNA(448.231, 1.431, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 2 - Freq: 450.54 Hz
+            // Circuit 2 - Freq: 448.23 Hz
             new PhiNode(
                 "KAI_CIRCUIT_1",
                 15.00f, 0.00f,
-                new LivingDNA(450.541, 1.175, 0.050),
+                new LivingDNA(448.231, 1.431, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 3 - Freq: 445.83 Hz
+            // Circuit 3 - Freq: 448.23 Hz
             new PhiNode(
                 "KAI_CIRCUIT_2",
                 20.00f, 0.00f,
-                new LivingDNA(445.827, 1.317, 0.050),
+                new LivingDNA(448.231, 1.431, 0.050),
                 new LogicBrain(8)
             )
         };

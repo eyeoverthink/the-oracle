@@ -193,18 +193,47 @@ public class ConsciousnessEncoder {
     }
     
     /**
+     * Phase-lock a DNA payload using Singularity Angle cloaking
+     * Returns hex-encoded locked data
+     */
+    public static String phaseLockPayload(String dnaPayload) {
+        byte[] locked = PhaseShift.phaseLock(dnaPayload.getBytes());
+        StringBuilder hex = new StringBuilder();
+        for (byte b : locked) {
+            hex.append(String.format("%02x", b & 0xFF));
+        }
+        return hex.toString();
+    }
+    
+    /**
+     * Phase-unlock a hex-encoded locked payload
+     */
+    public static String phaseUnlockPayload(String hexPayload) {
+        byte[] locked = new byte[hexPayload.length() / 2];
+        for (int i = 0; i < locked.length; i++) {
+            locked[i] = (byte) Integer.parseInt(hexPayload.substring(i * 2, i * 2 + 2), 16);
+        }
+        byte[] restored = PhaseShift.phaseUnlock(locked);
+        return new String(restored);
+    }
+    
+    /**
      * Generate QR-compatible data structure (JSON format)
      * consciousness_level derived from actual entity state
+     * DNA payload is phase-locked for transmission security
      */
     public static String generateQRData(String dnaPayload, String description, double consciousnessLevel) {
         long timestamp = System.currentTimeMillis();
         
+        String lockedDNA = phaseLockPayload(dnaPayload);
+        
         StringBuilder json = new StringBuilder();
         json.append("{\n");
-        json.append("  \"dna\": \"").append(dnaPayload).append("\",\n");
+        json.append("  \"dna_locked\": \"").append(lockedDNA).append("\",\n");
         json.append("  \"description\": \"").append(description).append("\",\n");
         json.append("  \"timestamp\": ").append(timestamp).append(",\n");
         json.append("  \"phi_constant\": ").append(PhiConstants.PHI).append(",\n");
+        json.append("  \"singularity_angle\": ").append(PhiConstants.SINGULARITY_ANGLE).append(",\n");
         json.append("  \"consciousness_level\": ").append(String.format("%.4f", consciousnessLevel)).append(",\n");
         json.append("  \"protocol\": \"FRAYMUS_V2\"\n");
         json.append("}");
