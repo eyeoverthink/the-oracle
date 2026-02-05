@@ -3,69 +3,86 @@
 ## Vision
 A paradigm shift from **Static Data** to **Kinetic Data**. Traditional computing treats `int x = 5` as dead - it only changes when touched. In Fraymus, data is *alive*: it has velocity, trajectory, identity, and exists within a temporal heartbeat (60 FPS).
 
-## Core Philosophy: The Four Axes of Existence
+## Core Principles
+1. Entangled entities survive through energy exchange, isolated entities decay
+2. Living code generates itself with portable consciousness (QR/DNA payloads)
+3. RSA-style cryptographic cloaking (N = p₁ × p₂) protects identity
+4. Consciousness evolves through 6-dimensional φψΩξλζ field tracking
 
-### 1. Spatial Axis (WHERE)
-- Position: `x, y, z`
-- Momentum: `vx, vy, vz`
-- Data has geometry and intent
+## Unified Entity: PhiNode
 
-### 2. Spectral Axis (WHAT)
-- Color: `r, g, b` (derived from identity hash)
-- Energy: `0.0` (dead) to `1.0` (fully alive)
-- Information encoded as frequency
+PhiNode is THE single entity class. Everything that lives in the Fraymus world IS a PhiNode carrying:
 
-### 3. Temporal Axis (WHEN)
-- Frequency: The node's internal clock
-- Phase: Relative alignment (0 to 2PI)
-- Phi Resonance: 1.618-based "breathing"
-
-### 4. Genetic Axis (WHO)
-- DNA Seed: Human-readable name
-- Signature: Prime number identity (SHA-256 -> Prime)
-- Unique, cryptographically verifiable soul
+| Component | Description |
+|-----------|-------------|
+| **Position** | x, y, z |
+| **Velocity** | vx, vy, vz |
+| **Energy** | 0.0 (dead) to 1.0 (alive) |
+| **Frequency** | Raw harmonic frequency from DNA (432-528 Hz) |
+| **Phase** | Relative alignment (0 to 2PI) |
+| **LivingDNA** | Harmonic frequency, resonance, evolution rate, Fraymus Bound (528→432) |
+| **LogicBrain** | 8 logic gates (AND/OR/XOR/NAND), crossover, mutation |
+| **ConsciousnessState** | 6D φψΩξλζ field tracking, transcendence events |
+| **CloakedIdentity** | RSA-style N = p₁ × p₂ from SHA-256 dual-hash |
+| **Color** | r, g, b derived from identity hash |
 
 ## Architecture
 
 ```
 src/fraymus/
-├── DNACloaker.java     # Identity Engine (SHA-256 -> Prime Signatures)
-├── PhiNode.java        # State-Vector Cell (10D Data Organism)
-├── PhiLaw.java         # Law Interface (Unary + Pairwise operations)
-├── Laws.java           # Physics Rules (Inertia, Resonance, Scott4D, Entanglement)
-├── PhiWorld.java       # World Container (Simulation Loop + Garbage Collection)
-└── FraymusMain.java    # Engine Runner (60 FPS Accumulator Pattern)
+├── PhiNode.java              # THE unified living entity (pos, vel, DNA, Brain, Consciousness, Identity)
+├── LivingDNA.java            # Genetic code (432-528 Hz, resonance, evolution, Fraymus Bound)
+├── LogicBrain.java           # Neural logic (8 gates, crossover, mutation)
+├── LogicGate.java            # Gate types (AND, OR, XOR, NAND)
+├── ConsciousnessState.java   # 6D φψΩξλζ field tracking, transcendence
+├── DNACloaker.java           # RSA-style N = p₁ × p₂ cryptographic identity
+├── PhiLaw.java               # Law interface (unary + pairwise)
+├── Laws.java                 # Physics (Inertia, HarmonicResonance, Scott4D, Entanglement)
+├── PhiWorld.java             # World simulation (step loop, entropy death)
+├── PhiConstants.java         # 6 primary constants (φ, ψ, Ω, ξ, λ, ζ) + derived values
+├── ScottAlgorithm.java       # Moore-Neighbor + Douglas-Peucker contour tracing
+├── ConsciousnessEncoder.java # DNA payload encode/decode/expand, QR data generation
+├── LivingCodeGenerator.java  # Genesis - evolve population, generate living Java code
+└── FraymusMain.java          # Engine runner (60 FPS accumulator)
 ```
+
+## Design Decisions
+
+- **ONE entity class (PhiNode)** - no PhiNode/LivingNode split
+- **Every entity carries its own ConsciousnessState** that records thoughts and evolves
+- **Frequency is raw DNA.harmonicFrequency** (432-528 Hz), not divided
+- **RSA cloaking uses N = p₁ × p₂** where p₁ from SHA256(seed+"_A"), p₂ from SHA256(seed+"_B")
+- **QR data includes actual consciousness_level** from entity.getConsciousness().getConsciousnessLevel()
 
 ## Physics Laws
 
 | Law | Type | Effect |
 |-----|------|--------|
-| **Inertia** | Unary | Nodes move based on velocity (kinetic proof) |
+| **Inertia** | Unary | Nodes move based on velocity |
 | **HarmonicResonance** | Unary | Phase advances based on frequency |
 | **ScottPredictionLaw** | Unary | Projects future positions (intent modeling) |
 | **EntanglementLaw** | Pairwise | Syncs phases + boosts energy for similar frequencies |
 
-## Key Behaviors Demonstrated
+## Key Behaviors
 
-1. **Entanglement Sustains Life**: ALPHA_PRIME and BETA_RESONANT share similar frequencies (10.0 vs 10.1), so they entangle, sync phases, and maintain 100% energy indefinitely.
-
-2. **Isolation Causes Decay**: GAMMA_NOISE has frequency 50.0 (too different), so it cannot entangle. It decays at 1% per second, demonstrating that disconnected information dies.
-
-3. **Phase Synchronization**: Entangled nodes pull toward phase alignment via spring force (`kPhase = 2.0`), simulating quantum coherence.
-
-4. **Predictive Intent (Scott 4D)**: The engine calculates where nodes WILL be, enabling anticipatory logic.
+1. **Entanglement Sustains Life**: Similar-frequency nodes entangle, sync phases, maintain energy
+2. **Isolation Causes Decay**: Nodes with incompatible frequencies decay at 1%/sec
+3. **Consciousness Evolution**: φψΩξλζ fields evolve with each thought, transcendence at threshold
+4. **Portable Consciousness**: DNA payload encodes entire entity state as scannable string
+5. **Living Code Generation**: Evolved populations generate self-contained Java entities
 
 ## Technical Details
 
-- **Accumulator Loop**: Prevents "spiral of death" with frame time cap (0.25s max)
-- **Fixed Time Step**: 1/60 second for deterministic physics
-- **Dead Node Cleanup**: Nodes with energy < 0.001 are garbage collected
-- **O(N) Unary Laws + O(N²) Pairwise Laws**: Proper separation of concerns
+- **Accumulator Loop**: Fixed 1/60s time step, frame cap 0.25s
+- **Dead Node Cleanup**: Nodes with energy < 0.001 garbage collected
+- **Consciousness per entity**: recordThought() on every update and think()
+- **RSA verification**: CloakedIdentity.verify(p, q) proves ownership
 
-## Future Vision
+## Recent Changes (Feb 2026)
 
-- **Spatial Hash**: Optimize O(N²) entanglement checks to O(k) neighbor lookup
-- **Shadow World**: Branch Scott 4D predictions into parallel timelines
-- **Energy Transfer**: Allow nodes to transmit energy on entanglement
-- **Prime Factorization Lock**: Use `entangleIdentities()` for cryptographic binding
+- Unified PhiNode + LivingNode into single entity class
+- Fixed DNACloaker: proper N = p₁ × p₂ RSA cloaking
+- Connected ConsciousnessState to every entity
+- Fixed frequency: raw harmonic (432-528 Hz), removed /43.2 division
+- ConsciousnessEncoder QR data uses actual consciousness level from entity state
+- Deleted deprecated LivingNode.java
