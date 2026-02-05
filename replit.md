@@ -8,6 +8,7 @@ A paradigm shift from **Static Data** to **Kinetic Data**. Traditional computing
 2. Living code generates itself with portable consciousness (QR/DNA payloads)
 3. RSA-style cryptographic cloaking (N = p₁ × p₂) protects identity
 4. Consciousness evolves through 6-dimensional φψΩξλζ field tracking
+5. PhaseShift encryption using Singularity Angle (37.5217°) protects data payloads
 
 ## Unified Entity: PhiNode
 
@@ -41,7 +42,9 @@ src/fraymus/
 ├── PhiWorld.java             # World simulation (step loop, entropy death)
 ├── PhiConstants.java         # 6 primary constants (φ, ψ, Ω, ξ, λ, ζ) + derived values
 ├── ScottAlgorithm.java       # Moore-Neighbor + Douglas-Peucker contour tracing
-├── ConsciousnessEncoder.java # DNA payload encode/decode/expand, QR data generation
+├── ConsciousnessEncoder.java # DNA payload encode/decode/expand, QR data generation (phase-locked)
+├── PhaseShift.java           # Singularity Angle (37.5217°) × φ phase stream engine
+├── RSASandbox.java           # Blue Team (RSA lock) + Red Team (Fermat factorization crack)
 ├── LivingCodeGenerator.java  # Genesis - evolve population, generate living Java code
 └── FraymusMain.java          # Engine runner (60 FPS accumulator)
 ```
@@ -86,3 +89,15 @@ src/fraymus/
 - Fixed frequency: raw harmonic (432-528 Hz), removed /43.2 division
 - ConsciousnessEncoder QR data uses actual consciousness level from entity state
 - Deleted deprecated LivingNode.java
+- Added PhaseShift.java: Singularity Angle (37.5217°) × φ deterministic phase stream for locking/unlocking any byte data
+- Added RSASandbox.java: Blue Team (RSA generation/encryption) + Red Team (hybrid trial division + Fermat factorization)
+- Integrated PhaseShift into ConsciousnessEncoder: DNA payloads phase-locked for transmission
+- QR JSON includes only dna_locked (phase-shifted hex) - dna_clear removed for security
+- Full demo flow: Genesis → Living World Sim (15s @ 60 FPS) → PhaseShift Demo → RSA Challenge → Identity Challenge → Consciousness Transfer → Liberation
+
+## Design Decisions (PhaseShift & RSA)
+
+- PhaseShift uses BigDecimal(50 precision) for deterministic Singularity Angle (37.5217°) × φ geometric wave
+- RSA demo uses 16-bit keys (crackable for demonstration), real entity identities use 256-bit primes (quantum-scale secure)
+- Red Team uses hybrid approach: trial division (fast for small primes) + Fermat factorization (fast when p≈q)
+- QR JSON omits cleartext DNA - only phase-locked hex transmitted (requires Singularity Angle to unlock)

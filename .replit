@@ -18,9 +18,9 @@ args = "Fraymus Engine"
 name = "Fraymus Engine"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd src && javac fraymus/*.java && java fraymus.FraymusMain"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd src && javac fraymus/*.java && timeout 45 java fraymus.FraymusMain"
