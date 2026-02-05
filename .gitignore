@@ -11,3 +11,7 @@ out/
 .DS_Store
 *.swp
 *.swo
+.gradle/
+gradle/
+gradlew
+gradlew.bat
