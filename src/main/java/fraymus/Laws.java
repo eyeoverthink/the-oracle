@@ -21,6 +21,7 @@ public class Laws {
 
     public static class ScottPredictionLaw implements PhiLaw {
         private float lookAheadTime;
+        private int tickCounter = 0;
 
         public ScottPredictionLaw(float lookAhead) {
             this.lookAheadTime = lookAhead;
@@ -30,10 +31,10 @@ public class Laws {
         public void apply(PhiNode n, float dt) {
             float futureX = n.x + (n.vx * lookAheadTime);
             float futureY = n.y + (n.vy * lookAheadTime);
-            
-            if (Math.abs(n.vx) > 0.5 || Math.abs(n.vy) > 0.5) {
-                System.out.printf("  [SCOTT-4D] %s -> Future(%.2f, %.2f) in %.1fs%n",
-                   n.name, futureX, futureY, lookAheadTime);
+
+            tickCounter++;
+            if ((Math.abs(n.vx) > 0.5 || Math.abs(n.vy) > 0.5) && tickCounter % 120 == 0) {
+                FraymusUI.addLog(String.format("[SCOTT-4D] %s -> Future(%.1f, %.1f)", n.name, futureX, futureY));
             }
         }
     }
@@ -48,22 +49,26 @@ public class Laws {
         @Override
         public void apply(PhiNode n, float dt) {}
 
+        private int pairTick = 0;
+
         @Override
         public void applyPair(PhiNode a, PhiNode b, float dt) {
             if (Math.abs(a.frequency - b.frequency) > epsFreq) return;
 
             float d = wrapPhase(a.phase - b.phase);
-            
+
             float correction = -kPhase * d;
-            
+
             a.phase += correction * dt;
             b.phase -= correction * dt;
-            
+
             a.energy = Math.min(1.0f, a.energy + 0.05f * dt);
             b.energy = Math.min(1.0f, b.energy + 0.05f * dt);
-            
-            System.out.printf("  [ENTANGLE] %s <-> %s (phase sync: %.3f)%n", 
-                a.name, b.name, Math.abs(d));
+
+            pairTick++;
+            if (pairTick % 180 == 0) {
+                FraymusUI.addLog(String.format("[ENTANGLE] %s <-> %s (sync: %.3f)", a.name, b.name, Math.abs(d)));
+            }
         }
 
         private float wrapPhase(float p) {
