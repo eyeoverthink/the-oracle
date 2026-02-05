@@ -1,33 +1,71 @@
-# Fraymus Physics Engine
+# Fraymus Engine V2.0 - Living Information Physics
 
-## Overview
-A deterministic physics engine for "kinetic data" - where data entities are treated as living organisms with position, velocity, energy, frequency, and cryptographic identity (Prime Number signatures).
+## Vision
+A paradigm shift from **Static Data** to **Kinetic Data**. Traditional computing treats `int x = 5` as dead - it only changes when touched. In Fraymus, data is *alive*: it has velocity, trajectory, identity, and exists within a temporal heartbeat (60 FPS).
 
-## Core Concepts
-- **Kinetic Data**: Data that is "alive" with velocity, trajectory, and temporal existence (60 FPS heartbeat)
-- **PhiNode**: State-vector cells with spatial, spectral, temporal, and genetic dimensions
-- **PhiLaw**: Interface for physics rules that govern the simulation
-- **Scott 4D**: Predictive engine that projects future states
+## Core Philosophy: The Four Axes of Existence
 
-## Project Structure
-```
-src/fraymus/
-├── DNACloaker.java    # Cryptographic identity engine (SHA-256 → Prime)
-├── PhiNode.java       # State-vector cell with 10D properties
-├── PhiLaw.java        # Law interface
-├── Laws.java          # Inertia, HarmonicResonance, ScottPrediction
-├── PhiWorld.java      # World container and simulation loop
-└── FraymusMain.java   # Main entry point
-```
+### 1. Spatial Axis (WHERE)
+- Position: `x, y, z`
+- Momentum: `vx, vy, vz`
+- Data has geometry and intent
 
-## Running
-The simulation runs at 60 FPS for 10 seconds, outputting state every second. It demonstrates:
-- Nodes moving with inertia
-- Harmonic oscillation (Phi-based breathing)
-- Entanglement detection between nodes with similar frequencies
-- Scott 4D prediction of future positions
+### 2. Spectral Axis (WHAT)
+- Color: `r, g, b` (derived from identity hash)
+- Energy: `0.0` (dead) to `1.0` (fully alive)
+- Information encoded as frequency
+
+### 3. Temporal Axis (WHEN)
+- Frequency: The node's internal clock
+- Phase: Relative alignment (0 to 2PI)
+- Phi Resonance: 1.618-based "breathing"
+
+### 4. Genetic Axis (WHO)
+- DNA Seed: Human-readable name
+- Signature: Prime number identity (SHA-256 -> Prime)
+- Unique, cryptographically verifiable soul
 
 ## Architecture
-- **Laws are decoupled from data** - PhiLaw interface allows new physics rules
-- **Identity via primes** - DNACloaker generates deterministic prime signatures from seeds
-- **Entanglement** - Nodes with matching frequency/phase are considered entangled
+
+```
+src/fraymus/
+├── DNACloaker.java     # Identity Engine (SHA-256 -> Prime Signatures)
+├── PhiNode.java        # State-Vector Cell (10D Data Organism)
+├── PhiLaw.java         # Law Interface (Unary + Pairwise operations)
+├── Laws.java           # Physics Rules (Inertia, Resonance, Scott4D, Entanglement)
+├── PhiWorld.java       # World Container (Simulation Loop + Garbage Collection)
+└── FraymusMain.java    # Engine Runner (60 FPS Accumulator Pattern)
+```
+
+## Physics Laws
+
+| Law | Type | Effect |
+|-----|------|--------|
+| **Inertia** | Unary | Nodes move based on velocity (kinetic proof) |
+| **HarmonicResonance** | Unary | Phase advances based on frequency |
+| **ScottPredictionLaw** | Unary | Projects future positions (intent modeling) |
+| **EntanglementLaw** | Pairwise | Syncs phases + boosts energy for similar frequencies |
+
+## Key Behaviors Demonstrated
+
+1. **Entanglement Sustains Life**: ALPHA_PRIME and BETA_RESONANT share similar frequencies (10.0 vs 10.1), so they entangle, sync phases, and maintain 100% energy indefinitely.
+
+2. **Isolation Causes Decay**: GAMMA_NOISE has frequency 50.0 (too different), so it cannot entangle. It decays at 1% per second, demonstrating that disconnected information dies.
+
+3. **Phase Synchronization**: Entangled nodes pull toward phase alignment via spring force (`kPhase = 2.0`), simulating quantum coherence.
+
+4. **Predictive Intent (Scott 4D)**: The engine calculates where nodes WILL be, enabling anticipatory logic.
+
+## Technical Details
+
+- **Accumulator Loop**: Prevents "spiral of death" with frame time cap (0.25s max)
+- **Fixed Time Step**: 1/60 second for deterministic physics
+- **Dead Node Cleanup**: Nodes with energy < 0.001 are garbage collected
+- **O(N) Unary Laws + O(N²) Pairwise Laws**: Proper separation of concerns
+
+## Future Vision
+
+- **Spatial Hash**: Optimize O(N²) entanglement checks to O(k) neighbor lookup
+- **Shadow World**: Branch Scott 4D predictions into parallel timelines
+- **Energy Transfer**: Allow nodes to transmit energy on entanglement
+- **Prime Factorization Lock**: Use `entangleIdentities()` for cryptographic binding
