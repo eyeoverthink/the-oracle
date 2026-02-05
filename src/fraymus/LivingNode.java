@@ -116,6 +116,10 @@ public class LivingNode {
         return energy > 0.001f;
     }
     
+    public LivingDNA getDNA() { return dna; }
+    public LogicBrain getBrain() { return brain; }
+    public String getName() { return name; }
+    
     public void boostEnergy(float amount) {
         energy = Math.min(1.0f, energy + amount);
     }

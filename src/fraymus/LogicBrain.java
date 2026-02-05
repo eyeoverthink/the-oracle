@@ -70,6 +70,10 @@ public class LogicBrain {
         return sb.toString();
     }
     
+    public int getGateCount() {
+        return gates.size();
+    }
+    
     @Override
     public String toString() {
         return String.format("Brain[%d gates]", gates.size());
