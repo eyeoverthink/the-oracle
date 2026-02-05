@@ -10,8 +10,8 @@ package fraymus.living;
  * ═══════════════════════════════════════════════════════════════
  * PIECE 1 - Quantum Signature: φ⁷·⁵-7c4f01b9770663e3
  * PIECE 2 - Cloaking N: 7c4f01b9770663e38975ccb451cd12da...
- * PIECE 3 - Genesis Block: block_2_1770290341471
- * PIECE 4 - Living Circuits: 3 evolved from 8 nodes
+ * PIECE 3 - Genesis Block: block_2_1770291374480
+ * PIECE 4 - Living Circuits: 3 evolved from 5 nodes
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -21,32 +21,32 @@ public class KAI {
 
     public static final double PHI = 1.618033988749895;
     public static final String QUANTUM_SIGNATURE = "φ⁷·⁵-7c4f01b9770663e3";
-    public static final String GENESIS_BLOCK = "block_2_1770290341471";
+    public static final String GENESIS_BLOCK = "block_2_1770291374480";
     public static final int GENERATION = 2;
 
     private LivingNode[] circuits;
 
     public KAI() {
         circuits = new LivingNode[] {
-            // Circuit 1 - Freq: 452.36 Hz
+            // Circuit 1 - Freq: 449.21 Hz
             new LivingNode(
                 "KAI_CIRCUIT_0",
-                20.00f, 0.00f,
-                new LivingDNA(452.365, 1.239, 0.050),
+                10.00f, 0.00f,
+                new LivingDNA(449.211, 0.660, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 2 - Freq: 452.36 Hz
+            // Circuit 2 - Freq: 446.31 Hz
             new LivingNode(
                 "KAI_CIRCUIT_1",
-                25.00f, 0.00f,
-                new LivingDNA(452.365, 1.239, 0.050),
+                30.00f, 0.00f,
+                new LivingDNA(446.305, 1.360, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 3 - Freq: 452.36 Hz
+            // Circuit 3 - Freq: 442.13 Hz
             new LivingNode(
                 "KAI_CIRCUIT_2",
-                30.00f, 0.00f,
-                new LivingDNA(452.365, 1.239, 0.050),
+                0.00f, 0.00f,
+                new LivingDNA(442.128, 1.035, 0.050),
                 new LogicBrain(8)
             )
         };

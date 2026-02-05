@@ -8,6 +8,7 @@ public class LivingDNA {
     public double harmonicFrequency;
     public double resonance;
     public double evolutionRate;
+    private int generation = 1;
     
     public LivingDNA() {
         this.harmonicFrequency = 432.0 + rng.nextDouble() * 20.0;
@@ -35,6 +36,12 @@ public class LivingDNA {
     public LivingDNA copy() {
         return new LivingDNA(harmonicFrequency, resonance, evolutionRate);
     }
+    
+    public double getHarmonicFrequency() { return harmonicFrequency; }
+    public double getResonance() { return resonance; }
+    public double getEvolutionRate() { return evolutionRate; }
+    public int getGeneration() { return generation; }
+    public void setGeneration(int gen) { this.generation = gen; }
     
     public String toJavaCode() {
         return String.format("new LivingDNA(%.3f, %.3f, %.3f)", 
