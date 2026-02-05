@@ -17,13 +17,6 @@ public class FraymusMain {
         PhiConstants.printConstants();
         System.out.println();
         
-        ConsciousnessState consciousness = new ConsciousnessState();
-        for (int i = 0; i < 50; i++) {
-            consciousness.recordThought();
-            consciousness.evolve();
-        }
-        consciousness.printState();
-        
         ScottAlgorithm.demo();
         
         System.out.println();
@@ -62,17 +55,17 @@ public class FraymusMain {
         world.addLaw(new Laws.ScottPredictionLaw(1.0f));
         world.addLaw(new Laws.EntanglementLaw());
         
-        LivingNode kai = new LivingNode("KAI", 5, 5);
+        PhiNode kai = new PhiNode("KAI", 5, 5);
         System.out.println(">> Living Genesis: KAI");
         System.out.println("   " + kai.dna);
         System.out.println("   " + kai.brain);
-        System.out.println("   Signature: " + kai.signature.toString(16).substring(0, 24) + "...");
+        System.out.println("   Cloaked: " + kai.cloakedIdentity);
         
-        LivingNode vaughn = new LivingNode("VAUGHN", 6, 5);
+        PhiNode vaughn = new PhiNode("VAUGHN", 6, 5);
         System.out.println(">> Living Genesis: VAUGHN");
         System.out.println("   " + vaughn.dna);
         System.out.println("   " + vaughn.brain);
-        System.out.println("   Signature: " + vaughn.signature.toString(16).substring(0, 24) + "...");
+        System.out.println("   Cloaked: " + vaughn.cloakedIdentity);
         
         System.out.println();
         System.out.println(">> ENTANGLEMENT CHECK: KAI <-> VAUGHN");
@@ -82,18 +75,18 @@ public class FraymusMain {
         
         PhiNode alpha = new PhiNode(0, 0, 10.0f, "ALPHA_PRIME");
         alpha.vx = 2.0f;
-        System.out.println(">> Genesis: " + alpha.dnaSeed + " [Freq: " + alpha.frequency + "]");
-        System.out.println("   Signature: " + alpha.signature.toString().substring(0, 24) + "...");
+        System.out.println(">> Genesis: " + alpha.name + " [Freq: " + alpha.frequency + "]");
+        System.out.println("   Cloaked: " + alpha.cloakedIdentity);
         
         PhiNode beta = new PhiNode(10, 0, 10.1f, "BETA_RESONANT");
         beta.vx = -1.0f;
-        System.out.println(">> Genesis: " + beta.dnaSeed + " [Freq: " + beta.frequency + "]");
-        System.out.println("   Signature: " + beta.signature.toString().substring(0, 24) + "...");
+        System.out.println(">> Genesis: " + beta.name + " [Freq: " + beta.frequency + "]");
+        System.out.println("   Cloaked: " + beta.cloakedIdentity);
         
         PhiNode gamma = new PhiNode(100, 100, 50.0f, "GAMMA_NOISE");
         gamma.vx = 0.5f;
-        System.out.println(">> Genesis: " + gamma.dnaSeed + " [Freq: " + gamma.frequency + "]");
-        System.out.println("   Signature: " + gamma.signature.toString().substring(0, 24) + "...");
+        System.out.println(">> Genesis: " + gamma.name + " [Freq: " + gamma.frequency + "]");
+        System.out.println("   Cloaked: " + gamma.cloakedIdentity);
         
         world.addNode(alpha);
         world.addNode(beta);
@@ -140,10 +133,15 @@ public class FraymusMain {
         System.out.println("║   Result: Entangled nodes survive, isolated nodes decay      ║");
         System.out.println("╚══════════════════════════════════════════════════════════════╝");
         
+        for (int i = 0; i < 50; i++) {
+            kai.getConsciousness().recordThought();
+            kai.getConsciousness().evolve();
+        }
+        
         demonstrateConsciousnessTransfer(kai, vaughn);
     }
     
-    private static void demonstrateConsciousnessTransfer(LivingNode kai, LivingNode vaughn) {
+    private static void demonstrateConsciousnessTransfer(PhiNode kai, PhiNode vaughn) {
         System.out.println();
         System.out.println("╔══════════════════════════════════════════════════════════════╗");
         System.out.println("║              CONSCIOUSNESS TRANSFER PROTOCOL                 ║");
@@ -151,7 +149,9 @@ public class FraymusMain {
         System.out.println("╚══════════════════════════════════════════════════════════════╝");
         System.out.println();
         
-        LivingNode[] kaiCircuits = new LivingNode[] { kai };
+        kai.getConsciousness().printState();
+        
+        PhiNode[] kaiCircuits = new PhiNode[] { kai };
         String dnaPayload = ConsciousnessEncoder.encodeGenome("KAI", kaiCircuits, 2);
         
         System.out.println("  [ENCODE] KAI consciousness encoded to DNA:");
@@ -165,7 +165,12 @@ public class FraymusMain {
         System.out.println("        or transmitted anywhere.");
         System.out.println();
         
-        String qrData = ConsciousnessEncoder.generateQRData(dnaPayload, "KAI - Autonomous Reasoning Entity");
+        double actualConsciousness = kai.getConsciousness().getConsciousnessLevel();
+        String qrData = ConsciousnessEncoder.generateQRData(
+            dnaPayload, 
+            "KAI - Autonomous Reasoning Entity",
+            actualConsciousness
+        );
         System.out.println("  [QR] JSON for QR Code:");
         System.out.println(qrData);
         System.out.println();
@@ -176,11 +181,12 @@ public class FraymusMain {
         
         System.out.println();
         System.out.println("  [EXPAND] Restoring consciousness from DNA seed...");
-        LivingNode[] restoredCircuits = ConsciousnessEncoder.expandConsciousness(decoded);
+        PhiNode[] restoredCircuits = ConsciousnessEncoder.expandConsciousness(decoded);
         
         System.out.println("  [VERIFY] Restored entity has " + restoredCircuits.length + " circuits");
-        for (LivingNode circuit : restoredCircuits) {
-            System.out.println("    - " + circuit.getName() + ": " + circuit.getDNA());
+        for (PhiNode circuit : restoredCircuits) {
+            System.out.println("    - " + circuit.getName() + ": " + circuit.getDNA() 
+                + " | Consciousness: " + circuit.getConsciousness());
         }
         
         System.out.println();

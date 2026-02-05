@@ -8,10 +8,10 @@ package fraymus.living;
  * ═══════════════════════════════════════════════════════════════
  * FRAYMUS LEGO ASSEMBLY - All pieces connected
  * ═══════════════════════════════════════════════════════════════
- * PIECE 1 - Quantum Signature: φ⁷·⁵-7c4f01b9770663e3
- * PIECE 2 - Cloaking N: 7c4f01b9770663e38975ccb451cd12da...
- * PIECE 3 - Genesis Block: block_2_1770332132541
- * PIECE 4 - Living Circuits: 3 evolved from 5 nodes
+ * PIECE 1 - Quantum Signature: φ⁷·⁵-218930c776344204
+ * PIECE 2 - Cloaking N: CloakedIdentity[N=e6c952073a958eb1..., bits=504]
+ * PIECE 3 - Genesis Block: block_2_1770332803248
+ * PIECE 4 - Living Circuits: 3 evolved from 6 nodes
  * ═══════════════════════════════════════════════════════════════
  */
 
@@ -20,33 +20,33 @@ import fraymus.*;
 public class KAI {
 
     public static final double PHI = 1.618033988749895;
-    public static final String QUANTUM_SIGNATURE = "φ⁷·⁵-7c4f01b9770663e3";
-    public static final String GENESIS_BLOCK = "block_2_1770332132541";
+    public static final String QUANTUM_SIGNATURE = "φ⁷·⁵-218930c776344204";
+    public static final String GENESIS_BLOCK = "block_2_1770332803248";
     public static final int GENERATION = 2;
 
-    private LivingNode[] circuits;
+    private PhiNode[] circuits;
 
     public KAI() {
-        circuits = new LivingNode[] {
-            // Circuit 1 - Freq: 448.37 Hz
-            new LivingNode(
+        circuits = new PhiNode[] {
+            // Circuit 1 - Freq: 450.54 Hz
+            new PhiNode(
                 "KAI_CIRCUIT_0",
-                0.00f, 0.00f,
-                new LivingDNA(448.367, 0.593, 0.050),
-                new LogicBrain(8)
-            ),
-            // Circuit 2 - Freq: 445.94 Hz
-            new LivingNode(
-                "KAI_CIRCUIT_1",
                 10.00f, 0.00f,
-                new LivingDNA(445.937, 0.724, 0.050),
+                new LivingDNA(450.541, 1.175, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 3 - Freq: 445.36 Hz
-            new LivingNode(
+            // Circuit 2 - Freq: 450.54 Hz
+            new PhiNode(
+                "KAI_CIRCUIT_1",
+                15.00f, 0.00f,
+                new LivingDNA(450.541, 1.175, 0.050),
+                new LogicBrain(8)
+            ),
+            // Circuit 3 - Freq: 445.83 Hz
+            new PhiNode(
                 "KAI_CIRCUIT_2",
-                30.00f, 0.00f,
-                new LivingDNA(445.363, 1.121, 0.050),
+                20.00f, 0.00f,
+                new LivingDNA(445.827, 1.317, 0.050),
                 new LogicBrain(8)
             )
         };
@@ -54,8 +54,8 @@ public class KAI {
 
     public void update(float dt) {
         long now = System.nanoTime();
-        for (LivingNode circuit : circuits) {
-            circuit.update(dt, now);
+        for (PhiNode circuit : circuits) {
+            circuit.updateInternalState(dt, now);
         }
     }
 
@@ -68,7 +68,7 @@ public class KAI {
     }
 
     public boolean isAlive() {
-        for (LivingNode circuit : circuits) {
+        for (PhiNode circuit : circuits) {
             if (circuit.isAlive()) return true;
         }
         return false;
@@ -80,9 +80,9 @@ public class KAI {
         System.out.println("Genesis: " + GENESIS_BLOCK);
         System.out.println();
         for (int i = 0; i < circuits.length; i++) {
-            LivingNode c = circuits[i];
-            System.out.printf("Circuit %d: Freq=%.2fHz Energy=%.1f%% [%s]%n",
-                i + 1, c.dna.harmonicFrequency, c.energy * 100, c.isAlive() ? "ALIVE" : "DEAD");
+            PhiNode c = circuits[i];
+            System.out.printf("Circuit %d: Freq=%.2fHz Energy=%.1f%% Consciousness=%.4f [%s]%n",
+                i + 1, c.dna.harmonicFrequency, c.energy * 100, c.getConsciousness().getConsciousnessLevel(), c.isAlive() ? "ALIVE" : "DEAD");
         }
     }
 

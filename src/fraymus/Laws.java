@@ -33,7 +33,7 @@ public class Laws {
             
             if (Math.abs(n.vx) > 0.5 || Math.abs(n.vy) > 0.5) {
                 System.out.printf("  [SCOTT-4D] %s -> Future(%.2f, %.2f) in %.1fs%n",
-                   n.dnaSeed, futureX, futureY, lookAheadTime);
+                   n.name, futureX, futureY, lookAheadTime);
             }
         }
     }
@@ -63,7 +63,7 @@ public class Laws {
             b.energy = Math.min(1.0f, b.energy + 0.05f * dt);
             
             System.out.printf("  [ENTANGLE] %s <-> %s (phase sync: %.3f)%n", 
-                a.dnaSeed, b.dnaSeed, Math.abs(d));
+                a.name, b.name, Math.abs(d));
         }
 
         private float wrapPhase(float p) {

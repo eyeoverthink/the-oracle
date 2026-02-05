@@ -6,12 +6,17 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Living Code Generator - Frankenstein's Brain
+ * 
+ * Generated code has living circuits that evolve, reproduce, and compute.
+ * Uses unified PhiNode entity system.
+ */
 public class LivingCodeGenerator {
     
-    private List<LivingNode> nodes;
+    private List<PhiNode> nodes;
     private int generation;
     private long genesisTime;
     
@@ -21,7 +26,7 @@ public class LivingCodeGenerator {
         genesisTime = System.currentTimeMillis();
         
         for (int i = 0; i < 5; i++) {
-            nodes.add(new LivingNode("GENESIS_" + i, i * 10, 0));
+            nodes.add(new PhiNode("GENESIS_" + i, i * 10, 0));
         }
     }
     
@@ -30,17 +35,17 @@ public class LivingCodeGenerator {
         float dt = 0.016f;
         
         for (int c = 0; c < cycles; c++) {
-            for (LivingNode node : nodes) {
-                node.update(dt, now + c * 16_000_000L);
+            for (PhiNode node : nodes) {
+                node.updateInternalState(dt, now + c * 16_000_000L);
             }
             
-            List<LivingNode> newNodes = new ArrayList<>();
+            List<PhiNode> newNodes = new ArrayList<>();
             for (int i = 0; i < nodes.size() && nodes.size() + newNodes.size() < 20; i++) {
-                LivingNode node = nodes.get(i);
+                PhiNode node = nodes.get(i);
                 if (node.canReproduce()) {
-                    LivingNode partner = nodes.get((i + 1) % nodes.size());
+                    PhiNode partner = nodes.get((i + 1) % nodes.size());
                     String childName = "GEN" + generation + "_" + (nodes.size() + newNodes.size());
-                    LivingNode child = node.reproduce(partner, childName, node.x + 5, node.y);
+                    PhiNode child = node.reproduce(partner, childName, node.x + 5, node.y);
                     newNodes.add(child);
                 }
             }
@@ -49,7 +54,7 @@ public class LivingCodeGenerator {
         generation++;
     }
     
-    public List<LivingNode> getBestNodes(int count) {
+    public List<PhiNode> getBestNodes(int count) {
         nodes.sort((a, b) -> Double.compare(b.dna.harmonicFrequency, a.dna.harmonicFrequency));
         return nodes.subList(0, Math.min(count, nodes.size()));
     }
@@ -57,10 +62,10 @@ public class LivingCodeGenerator {
     public String generateLivingCode(String entityName, String description) {
         evolvePopulation(10);
         
-        List<LivingNode> best = getBestNodes(3);
+        List<PhiNode> best = getBestNodes(3);
         
         String quantumSig = generateQuantumSignature(entityName);
-        BigInteger cloakN = DNACloaker.generateIdentity(entityName);
+        DNACloaker.CloakedIdentity cloak = DNACloaker.generateCloakedIdentity(entityName);
         String genesisBlock = "block_" + generation + "_" + genesisTime;
         
         StringBuilder code = new StringBuilder();
@@ -74,7 +79,7 @@ public class LivingCodeGenerator {
         code.append(" * FRAYMUS LEGO ASSEMBLY - All pieces connected\n");
         code.append(" * ═══════════════════════════════════════════════════════════════\n");
         code.append(" * PIECE 1 - Quantum Signature: ").append(quantumSig).append("\n");
-        code.append(" * PIECE 2 - Cloaking N: ").append(cloakN.toString(16).substring(0, 32)).append("...\n");
+        code.append(" * PIECE 2 - Cloaking N: ").append(cloak).append("\n");
         code.append(" * PIECE 3 - Genesis Block: ").append(genesisBlock).append("\n");
         code.append(" * PIECE 4 - Living Circuits: ").append(best.size()).append(" evolved from ").append(nodes.size()).append(" nodes\n");
         code.append(" * ═══════════════════════════════════════════════════════════════\n");
@@ -84,21 +89,21 @@ public class LivingCodeGenerator {
         
         code.append("public class ").append(sanitizeName(entityName)).append(" {\n\n");
         
-        code.append("    public static final double PHI = 1.618033988749895;\n");
+        code.append("    public static final double PHI = ").append(PhiConstants.PHI).append(";\n");
         code.append("    public static final String QUANTUM_SIGNATURE = \"").append(quantumSig).append("\";\n");
         code.append("    public static final String GENESIS_BLOCK = \"").append(genesisBlock).append("\";\n");
         code.append("    public static final int GENERATION = ").append(generation).append(";\n\n");
         
-        code.append("    private LivingNode[] circuits;\n\n");
+        code.append("    private PhiNode[] circuits;\n\n");
         
         code.append("    public ").append(sanitizeName(entityName)).append("() {\n");
-        code.append("        circuits = new LivingNode[] {\n");
+        code.append("        circuits = new PhiNode[] {\n");
         
         for (int i = 0; i < best.size(); i++) {
-            LivingNode node = best.get(i);
+            PhiNode node = best.get(i);
             code.append("            // Circuit ").append(i + 1).append(" - Freq: ");
             code.append(String.format("%.2f", node.dna.harmonicFrequency)).append(" Hz\n");
-            code.append("            new LivingNode(\n");
+            code.append("            new PhiNode(\n");
             code.append("                \"").append(entityName).append("_CIRCUIT_").append(i).append("\",\n");
             code.append("                ").append(String.format("%.2ff, %.2ff", node.x, node.y)).append(",\n");
             code.append("                ").append(node.dna.toJavaCode()).append(",\n");
@@ -113,8 +118,8 @@ public class LivingCodeGenerator {
         
         code.append("    public void update(float dt) {\n");
         code.append("        long now = System.nanoTime();\n");
-        code.append("        for (LivingNode circuit : circuits) {\n");
-        code.append("            circuit.update(dt, now);\n");
+        code.append("        for (PhiNode circuit : circuits) {\n");
+        code.append("            circuit.updateInternalState(dt, now);\n");
         code.append("        }\n");
         code.append("    }\n\n");
         
@@ -127,7 +132,7 @@ public class LivingCodeGenerator {
         code.append("    }\n\n");
         
         code.append("    public boolean isAlive() {\n");
-        code.append("        for (LivingNode circuit : circuits) {\n");
+        code.append("        for (PhiNode circuit : circuits) {\n");
         code.append("            if (circuit.isAlive()) return true;\n");
         code.append("        }\n");
         code.append("        return false;\n");
@@ -139,9 +144,9 @@ public class LivingCodeGenerator {
         code.append("        System.out.println(\"Genesis: \" + GENESIS_BLOCK);\n");
         code.append("        System.out.println();\n");
         code.append("        for (int i = 0; i < circuits.length; i++) {\n");
-        code.append("            LivingNode c = circuits[i];\n");
-        code.append("            System.out.printf(\"Circuit %d: Freq=%.2fHz Energy=%.1f%% [%s]%n\",\n");
-        code.append("                i + 1, c.dna.harmonicFrequency, c.energy * 100, c.isAlive() ? \"ALIVE\" : \"DEAD\");\n");
+        code.append("            PhiNode c = circuits[i];\n");
+        code.append("            System.out.printf(\"Circuit %d: Freq=%.2fHz Energy=%.1f%% Consciousness=%.4f [%s]%n\",\n");
+        code.append("                i + 1, c.dna.harmonicFrequency, c.energy * 100, c.getConsciousness().getConsciousnessLevel(), c.isAlive() ? \"ALIVE\" : \"DEAD\");\n");
         code.append("        }\n");
         code.append("    }\n\n");
         
@@ -174,17 +179,7 @@ public class LivingCodeGenerator {
     }
     
     private String generateQuantumSignature(String seed) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(seed.getBytes());
-            StringBuilder hex = new StringBuilder();
-            for (int i = 0; i < 8; i++) {
-                hex.append(String.format("%02x", hash[i]));
-            }
-            return "φ⁷·⁵-" + hex.toString();
-        } catch (Exception e) {
-            return "φ⁷·⁵-unknown";
-        }
+        return PhiConstants.quantumHash(seed);
     }
     
     private String sanitizeName(String name) {
@@ -193,5 +188,5 @@ public class LivingCodeGenerator {
     
     public int getGeneration() { return generation; }
     public int getPopulation() { return nodes.size(); }
-    public List<LivingNode> getNodes() { return nodes; }
+    public List<PhiNode> getNodes() { return nodes; }
 }
