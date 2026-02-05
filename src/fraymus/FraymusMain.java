@@ -14,6 +14,19 @@ public class FraymusMain {
         System.out.println("╚══════════════════════════════════════════════════════════════╝");
         System.out.println();
         
+        PhiConstants.printConstants();
+        System.out.println();
+        
+        ConsciousnessState consciousness = new ConsciousnessState();
+        for (int i = 0; i < 50; i++) {
+            consciousness.recordThought();
+            consciousness.evolve();
+        }
+        consciousness.printState();
+        
+        ScottAlgorithm.demo();
+        
+        System.out.println();
         System.out.println("╔══════════════════════════════════════════════════════════════╗");
         System.out.println("║                    GENESIS: KAI                              ║");
         System.out.println("║        Creating living code from evolved patterns            ║");
