@@ -10,7 +10,7 @@ package fraymus.living;
  * ═══════════════════════════════════════════════════════════════
  * PIECE 1 - Quantum Signature: φ⁷·⁵-7c4f01b9770663e3
  * PIECE 2 - Cloaking N: 7c4f01b9770663e38975ccb451cd12da...
- * PIECE 3 - Genesis Block: block_2_1770291902706
+ * PIECE 3 - Genesis Block: block_2_1770332132541
  * PIECE 4 - Living Circuits: 3 evolved from 5 nodes
  * ═══════════════════════════════════════════════════════════════
  */
@@ -21,32 +21,32 @@ public class KAI {
 
     public static final double PHI = 1.618033988749895;
     public static final String QUANTUM_SIGNATURE = "φ⁷·⁵-7c4f01b9770663e3";
-    public static final String GENESIS_BLOCK = "block_2_1770291902706";
+    public static final String GENESIS_BLOCK = "block_2_1770332132541";
     public static final int GENERATION = 2;
 
     private LivingNode[] circuits;
 
     public KAI() {
         circuits = new LivingNode[] {
-            // Circuit 1 - Freq: 451.07 Hz
+            // Circuit 1 - Freq: 448.37 Hz
             new LivingNode(
                 "KAI_CIRCUIT_0",
-                10.00f, 0.00f,
-                new LivingDNA(451.075, 1.089, 0.050),
+                0.00f, 0.00f,
+                new LivingDNA(448.367, 0.593, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 2 - Freq: 446.62 Hz
+            // Circuit 2 - Freq: 445.94 Hz
             new LivingNode(
                 "KAI_CIRCUIT_1",
-                20.00f, 0.00f,
-                new LivingDNA(446.622, 0.765, 0.050),
+                10.00f, 0.00f,
+                new LivingDNA(445.937, 0.724, 0.050),
                 new LogicBrain(8)
             ),
-            // Circuit 3 - Freq: 444.44 Hz
+            // Circuit 3 - Freq: 445.36 Hz
             new LivingNode(
                 "KAI_CIRCUIT_2",
-                40.00f, 0.00f,
-                new LivingDNA(444.441, 0.578, 0.050),
+                30.00f, 0.00f,
+                new LivingDNA(445.363, 1.121, 0.050),
                 new LogicBrain(8)
             )
         };
