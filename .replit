@@ -23,4 +23,8 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd src && javac fraymus/*.java && timeout 45 java fraymus.FraymusMain"
+args = "cd /home/runner/workspace && gradle run 2>&1"
+
+[nix]
+channel = "stable-25_05"
+packages = ["unzip", "gradle", "mesa", "glfw", "xorg.libX11", "xorg.libXcursor", "xorg.libXrandr", "xorg.libXinerama", "xorg.libXi", "libglvnd", "xvfb-run"]
