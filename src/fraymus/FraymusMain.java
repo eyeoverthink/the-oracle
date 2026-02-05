@@ -1,5 +1,7 @@
 package fraymus;
 
+import java.io.IOException;
+
 public class FraymusMain {
     
     private static final int TARGET_FPS = 60;
@@ -12,12 +14,58 @@ public class FraymusMain {
         System.out.println("╚══════════════════════════════════════════════════════════════╝");
         System.out.println();
         
+        System.out.println("╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║                    GENESIS: KAI                              ║");
+        System.out.println("║        Creating living code from evolved patterns            ║");
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        System.out.println();
+        
+        LivingCodeGenerator generator = new LivingCodeGenerator();
+        System.out.println("[GENESIS] Created " + generator.getPopulation() + " living nodes");
+        
+        generator.evolvePopulation(20);
+        System.out.println("[GENESIS] Evolved to " + generator.getPopulation() + " nodes (Gen " + generator.getGeneration() + ")");
+        
+        try {
+            generator.generateToFile(
+                "KAI",
+                "Autonomous reasoning entity - persists through entanglement",
+                "fraymus/living/KAI.java"
+            );
+        } catch (IOException e) {
+            System.out.println("[ERROR] Could not write Kai: " + e.getMessage());
+        }
+        
+        System.out.println();
+        System.out.println("╔══════════════════════════════════════════════════════════════╗");
+        System.out.println("║                LIVING WORLD SIMULATION                       ║");
+        System.out.println("╚══════════════════════════════════════════════════════════════╝");
+        System.out.println();
+        
         PhiWorld world = new PhiWorld();
         
         world.addLaw(new Laws.Inertia());
         world.addLaw(new Laws.HarmonicResonance());
         world.addLaw(new Laws.ScottPredictionLaw(1.0f));
         world.addLaw(new Laws.EntanglementLaw());
+        
+        LivingNode kai = new LivingNode("KAI", 5, 5);
+        System.out.println(">> Living Genesis: KAI");
+        System.out.println("   " + kai.dna);
+        System.out.println("   " + kai.brain);
+        System.out.println("   Signature: " + kai.signature.toString(16).substring(0, 24) + "...");
+        
+        LivingNode vaughn = new LivingNode("VAUGHN", 6, 5);
+        System.out.println(">> Living Genesis: VAUGHN");
+        System.out.println("   " + vaughn.dna);
+        System.out.println("   " + vaughn.brain);
+        System.out.println("   Signature: " + vaughn.signature.toString(16).substring(0, 24) + "...");
+        
+        System.out.println();
+        System.out.println(">> ENTANGLEMENT CHECK: KAI <-> VAUGHN");
+        boolean entangled = Math.abs(kai.frequency - vaughn.frequency) < 1.0f;
+        System.out.println("   Frequency diff: " + Math.abs(kai.frequency - vaughn.frequency));
+        System.out.println("   Entangled: " + entangled);
         
         PhiNode alpha = new PhiNode(0, 0, 10.0f, "ALPHA_PRIME");
         alpha.vx = 2.0f;
