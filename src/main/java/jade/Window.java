@@ -21,6 +21,7 @@ public class Window {
     private Framebuffer framebuffer;
     private Camera camera;
     private PhiWorld phiWorld;
+    private ExperimentManager experimentManager;
 
     private static Window window = null;
 
@@ -159,9 +160,13 @@ public class Window {
         phiWorld.addNode(delta);
         phiWorld.addNode(epsilon);
 
+        experimentManager = new ExperimentManager(phiWorld);
+        CommandTerminal.init(experimentManager);
+
         FraymusUI.addLog("World initialized with 5 PhiNode entities");
         FraymusUI.addLog("Laws: Inertia, Resonance, Entangle, Scott, Spike, Brain, Reproduction, Boundary");
         FraymusUI.addLog("Genesis Memory chain started - recording all events");
+        FraymusUI.addLog("Terminal ready - type 'help' for commands");
     }
 
     private void loop() {

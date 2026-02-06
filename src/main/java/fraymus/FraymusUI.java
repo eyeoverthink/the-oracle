@@ -66,6 +66,7 @@ public class FraymusUI {
         renderConceptArenaPanel(world);
         renderSystemVerification(world);
         renderLiveLog();
+        CommandTerminal.render();
     }
 
     private static void renderArenaView() {
@@ -373,8 +374,8 @@ public class FraymusUI {
     }
 
     private static void renderGenesisMemory(PhiWorld world) {
-        ImGui.setNextWindowPos(470, 740, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(300, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Genesis Memory")) {
             GenesisMemory memory = world.getMemory();
@@ -409,8 +410,8 @@ public class FraymusUI {
     }
 
     private static void renderSystemVerification(PhiWorld world) {
-        ImGui.setNextWindowPos(0, 870, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(610, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(330, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("System Verification")) {
             ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "FRAYMUS ENGINE V2 - PROOF OF SYSTEM");
@@ -519,8 +520,8 @@ public class FraymusUI {
     }
 
     private static void renderConceptArenaPanel(PhiWorld world) {
-        ImGui.setNextWindowPos(0, 740, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(470, 260, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(300, 440, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(640, 300, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Concept Arena")) {
             ConceptArena arena = world.getArena();
@@ -569,8 +570,8 @@ public class FraymusUI {
     }
 
     private static void renderLiveLog() {
-        ImGui.setNextWindowPos(470, 870, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(940, 810, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 190, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Live Log")) {
             if (ImGui.button("Clear")) {
