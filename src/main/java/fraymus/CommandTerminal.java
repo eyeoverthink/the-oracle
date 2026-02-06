@@ -76,8 +76,8 @@ public class CommandTerminal {
     }
 
     public static void render() {
-        ImGui.setNextWindowPos(0, 740, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(940, 260, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(0, 580, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(940, 140, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Terminal", ImGuiWindowFlags.NoScrollbar)) {
             float footerHeight = ImGui.getFrameHeightWithSpacing() + 4;
