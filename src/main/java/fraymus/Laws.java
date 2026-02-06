@@ -1,5 +1,7 @@
 package fraymus;
 
+import java.util.List;
+
 public class Laws {
 
     public static class Inertia implements PhiLaw {
@@ -42,6 +44,11 @@ public class Laws {
     public static class EntanglementLaw implements PhiLaw {
         private final float epsFreq = 0.5f;
         private final float kPhase = 2.0f;
+        private GenesisMemory memory;
+
+        public EntanglementLaw(GenesisMemory memory) {
+            this.memory = memory;
+        }
 
         @Override
         public boolean isPairwise() { return true; }
@@ -56,7 +63,6 @@ public class Laws {
             if (Math.abs(a.frequency - b.frequency) > epsFreq) return;
 
             float d = wrapPhase(a.phase - b.phase);
-
             float correction = -kPhase * d;
 
             a.phase += correction * dt;
@@ -67,7 +73,11 @@ public class Laws {
 
             pairTick++;
             if (pairTick % 180 == 0) {
-                FraymusUI.addLog(String.format("[ENTANGLE] %s <-> %s (sync: %.3f)", a.name, b.name, Math.abs(d)));
+                float syncValue = Math.abs(d);
+                FraymusUI.addLog(String.format("[ENTANGLE] %s <-> %s (sync: %.3f)", a.name, b.name, syncValue));
+                if (memory != null) {
+                    memory.recordEntanglement(a.name, b.name, syncValue);
+                }
             }
         }
 
@@ -75,6 +85,207 @@ public class Laws {
             while (p > Math.PI) p -= (float)(2 * Math.PI);
             while (p < -Math.PI) p += (float)(2 * Math.PI);
             return p;
+        }
+    }
+
+    public static class ResonanceSpikeLaw implements PhiLaw {
+        private GenesisMemory memory;
+
+        public ResonanceSpikeLaw(GenesisMemory memory) {
+            this.memory = memory;
+        }
+
+        @Override
+        public void apply(PhiNode n, float dt) {
+            QuantumClock clock = n.quantumClock;
+            if (clock == null) return;
+
+            if (clock.isSpikeActive()) {
+                n.boostEnergy(0.03f * dt);
+
+                n.consciousness.evolve();
+
+                if (clock.getResonanceSpikeCount() % 10 == 1) {
+                    FraymusUI.addLog(String.format("[SPIKE] %s phi=%.4f osc=%.0f",
+                            n.name, clock.getPhiResonance(), clock.getOscillationCount()));
+                    if (memory != null) {
+                        memory.recordResonanceSpike(n.name, clock.getPhiResonance(), clock.getOscillationCount());
+                    }
+                }
+            }
+        }
+    }
+
+    public static class BrainLaw implements PhiLaw {
+        private GenesisMemory memory;
+        private PhiWorld world;
+        private int tickCounter = 0;
+
+        public BrainLaw(PhiWorld world, GenesisMemory memory) {
+            this.world = world;
+            this.memory = memory;
+        }
+
+        @Override
+        public void apply(PhiNode n, float dt) {
+            tickCounter++;
+            if (tickCounter % 6 != 0) return;
+
+            List<PhiNode> allNodes = world.getNodes();
+
+            int nearbyCount = 0;
+            float totalFreqDiff = 0;
+            PhiNode nearest = null;
+            float nearestDist = Float.MAX_VALUE;
+
+            for (PhiNode other : allNodes) {
+                if (other == n) continue;
+                float dx = other.x - n.x;
+                float dy = other.y - n.y;
+                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                if (dist < 50.0f) {
+                    nearbyCount++;
+                    totalFreqDiff += Math.abs(n.frequency - other.frequency);
+                }
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearest = other;
+                }
+            }
+
+            float avgFreqDiff = nearbyCount > 0 ? totalFreqDiff / nearbyCount : 100.0f;
+            boolean spikeActive = n.quantumClock != null && n.quantumClock.isSpikeActive();
+            float coherence = (float) n.consciousness.getCoherence();
+
+            int[] sensors = LogicBrain.buildSensorInputs(
+                    nearbyCount, avgFreqDiff, n.energy, n.phiResonance,
+                    coherence, n.phase, spikeActive, n.age
+            );
+
+            int[] outputs = n.brain.compute(sensors);
+            String decision = n.brain.interpretOutputs(outputs);
+
+            if (n.brain.wantsToSeek(outputs) && nearest != null) {
+                float dx = nearest.x - n.x;
+                float dy = nearest.y - n.y;
+                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                if (dist > 1.0f) {
+                    n.vx += (dx / dist) * 2.0f * dt;
+                    n.vy += (dy / dist) * 2.0f * dt;
+                }
+            }
+
+            if (n.brain.wantsToFlee(outputs) && nearest != null) {
+                float dx = n.x - nearest.x;
+                float dy = n.y - nearest.y;
+                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0.5f) {
+                    n.vx += (dx / dist) * 3.0f * dt;
+                    n.vy += (dy / dist) * 3.0f * dt;
+                }
+            }
+
+            if (n.brain.wantsToConserve(outputs)) {
+                n.vx *= 0.95f;
+                n.vy *= 0.95f;
+                n.boostEnergy(0.005f * dt);
+            }
+
+            if (n.brain.wantsToMutate(outputs) && spikeActive) {
+                n.brain.mutate();
+                if (memory != null && tickCounter % 60 == 0) {
+                    memory.recordMutation(n.name, "spike-triggered");
+                    FraymusUI.addLog(String.format("[MUTATE] %s brain rewired during spike", n.name));
+                }
+            }
+
+            if (n.brain.wantsEnergyBurst(outputs) && n.energy > 0.5f) {
+                n.energy -= 0.02f;
+                float burstVx = (float)(Math.cos(n.phase) * 5.0);
+                float burstVy = (float)(Math.sin(n.phase) * 5.0);
+                n.vx += burstVx * dt;
+                n.vy += burstVy * dt;
+            }
+
+            if (n.brain.wantsEvolveDNA(outputs)) {
+                n.dna.evolve();
+                n.frequency = (float) n.dna.harmonicFrequency;
+            }
+
+            float maxVel = 15.0f;
+            n.vx = Math.max(-maxVel, Math.min(maxVel, n.vx));
+            n.vy = Math.max(-maxVel, Math.min(maxVel, n.vy));
+
+            if (tickCounter % 300 == 0 && !decision.equals("IDLE")) {
+                if (memory != null) {
+                    memory.recordBrainDecision(n.name, decision);
+                }
+                FraymusUI.addLog(String.format("[BRAIN] %s -> %s", n.name, decision));
+            }
+        }
+    }
+
+    public static class ReproductionLaw implements PhiLaw {
+        private PhiWorld world;
+        private GenesisMemory memory;
+        private int tickCounter = 0;
+        private int childCount = 0;
+        private static final int MAX_POPULATION = 30;
+
+        public ReproductionLaw(PhiWorld world, GenesisMemory memory) {
+            this.world = world;
+            this.memory = memory;
+        }
+
+        @Override
+        public void apply(PhiNode n, float dt) {
+            tickCounter++;
+            if (tickCounter % 120 != 0) return;
+            if (world.getPopulation() >= MAX_POPULATION) return;
+
+            if (!n.canReproduce()) return;
+
+            int[] outputs = n.brain.getLastOutputs();
+            if (!n.brain.wantsToReproduce(outputs)) return;
+
+            boolean spikeActive = n.quantumClock != null && n.quantumClock.isSpikeActive();
+            if (!spikeActive && n.energy < 0.9f) return;
+
+            childCount++;
+            String childName = n.name + "-" + childCount;
+
+            float offsetX = (float)(Math.cos(n.phase) * 5.0);
+            float offsetY = (float)(Math.sin(n.phase) * 5.0);
+
+            PhiNode child = n.reproduce(null, childName, n.x + offsetX, n.y + offsetY);
+            child.vx = offsetX * 0.5f;
+            child.vy = offsetY * 0.5f;
+
+            world.addNode(child);
+
+            if (memory != null) {
+                memory.recordBirth(childName, n.name);
+            }
+            FraymusUI.addLog(String.format("[BIRTH] %s spawned %s", n.name, childName));
+        }
+    }
+
+    public static class BoundaryLaw implements PhiLaw {
+        private float minX, maxX, minY, maxY;
+
+        public BoundaryLaw(float minX, float maxX, float minY, float maxY) {
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minY = minY;
+            this.maxY = maxY;
+        }
+
+        @Override
+        public void apply(PhiNode n, float dt) {
+            if (n.x < minX) { n.x = minX; n.vx = Math.abs(n.vx) * 0.5f; }
+            if (n.x > maxX) { n.x = maxX; n.vx = -Math.abs(n.vx) * 0.5f; }
+            if (n.y < minY) { n.y = minY; n.vy = Math.abs(n.vy) * 0.5f; }
+            if (n.y > maxY) { n.y = maxY; n.vy = -Math.abs(n.vy) * 0.5f; }
         }
     }
 }
