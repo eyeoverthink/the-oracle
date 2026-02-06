@@ -7,6 +7,7 @@ import imgui.flag.ImGuiWindowFlags;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FraymusUI {
 
@@ -61,6 +62,8 @@ public class FraymusUI {
         renderConsciousnessMonitor(world);
         renderQuantumClockPanel(world);
         renderGenesisMemory(world);
+        renderColonyOverview(world);
+        renderConceptArenaPanel(world);
         renderSystemVerification(world);
         renderLiveLog();
     }
@@ -133,14 +136,17 @@ public class FraymusUI {
                 PhiNode node = nodes.get(i);
                 String spike = node.spikeFlash ? " [SPIKE]" : "";
                 String trial = node.adaptiveEngine.isInTrial() ? " [TRIAL]" : "";
-                String label = String.format("%s [E:%.0f%% G:%d]%s%s###node_%d",
-                        node.name, node.energy * 100, node.dna.getGeneration(), spike, trial, i);
+                String roleTag = " <" + node.getRole().displayName + ">";
+                String label = String.format("%s%s [E:%.0f%% G:%d]%s%s###node_%d",
+                        node.name, roleTag, node.energy * 100, node.dna.getGeneration(), spike, trial, i);
 
                 if (ImGui.collapsingHeader(label)) {
                     selectedNodeIndex = i;
                     ImGui.indent();
 
                     ImGui.textColored(node.r, node.g, node.b, 1.0f, "Name: " + node.name);
+                    float[] rc = node.getRole().color;
+                    ImGui.textColored(rc[0], rc[1], rc[2], 1.0f, "Role: " + node.getRole().displayName);
                     ImGui.text(String.format("Generation: %d", node.dna.getGeneration()));
                     ImGui.text(String.format("Position: (%.2f, %.2f, %.2f)", node.x, node.y, node.z));
                     ImGui.text(String.format("Velocity: (%.2f, %.2f, %.2f)", node.vx, node.vy, node.vz));
@@ -448,13 +454,123 @@ public class FraymusUI {
             case "MUTATION": return new float[]{1.0f, 0.5f, 0.0f};
             case "ADAPTATION": return new float[]{0.0f, 1.0f, 1.0f};
             case "GENESIS": return new float[]{1.0f, 1.0f, 1.0f};
+            case "COLONY_EVENT": return new float[]{1.0f, 0.8f, 0.2f};
+            case "CONCEPT_BATTLE": return new float[]{1.0f, 0.4f, 0.8f};
+            case "CODE_GENERATED": return new float[]{0.4f, 1.0f, 0.8f};
             default: return new float[]{0.7f, 0.7f, 0.7f};
         }
     }
 
-    private static void renderLiveLog() {
+    private static void renderColonyOverview(PhiWorld world) {
         ImGui.setNextWindowPos(10, 730, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(680, 130, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 260, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Colony Overview")) {
+            ColonyCoach coach = world.getCoach();
+
+            ImGui.textColored(1.0f, 0.8f, 0.2f, 1.0f, "ANT COLONY INTELLIGENCE");
+            ImGui.separator();
+
+            ImGui.text("Health:");
+            ImGui.sameLine();
+            float health = (float) coach.getColonyHealth();
+            if (health > 0.6f) {
+                ImGui.textColored(0.0f, 1.0f, 0.3f, 1.0f, String.format("%.2f", health));
+            } else if (health > 0.3f) {
+                ImGui.textColored(1.0f, 1.0f, 0.0f, 1.0f, String.format("%.2f", health));
+            } else {
+                ImGui.textColored(1.0f, 0.3f, 0.3f, 1.0f, String.format("%.2f", health));
+            }
+
+            ImGui.text(String.format("Productivity: %.3f", coach.getColonyProductivity()));
+            ImGui.text(String.format("Diversity: %.1f%%", coach.getColonyDiversity() * 100));
+            ImGui.text(String.format("Resonance: %.1f%%", coach.getColonyResonance() * 100));
+            ImGui.text(String.format("Evaluations: %d | Code Gen: %d", coach.getTotalEvaluations(), coach.getTotalCodeGenerated()));
+
+            ImGui.separator();
+            ImGui.textColored(0.8f, 0.8f, 0.2f, 1.0f, "Coach: " + coach.getLastCoachingAction());
+
+            ImGui.separator();
+            ImGui.text("Role Distribution:");
+
+            Map<AntRole, ColonyCoach.RoleMetrics> metrics = coach.getRoleMetrics();
+            for (AntRole role : AntRole.values()) {
+                ColonyCoach.RoleMetrics rm = metrics.get(role);
+                float[] c = role.color;
+                ImGui.textColored(c[0], c[1], c[2], 1.0f,
+                    String.format("  %s: %d entities", role.displayName, rm.entityCount));
+                if (rm.entityCount > 0) {
+                    ImGui.sameLine();
+                    ImGui.textColored(0.6f, 0.6f, 0.6f, 1.0f,
+                        String.format(" (fit=%.2f e=%.2f code=%d)", rm.avgFitness, rm.avgEnergy, rm.conceptsGenerated));
+                }
+            }
+
+            ImGui.separator();
+            ImGui.text("Coach Log:");
+            ImGui.beginChild("CoachLogScroll", 0, 60, false, ImGuiWindowFlags.HorizontalScrollbar);
+            List<String> log = coach.getCoachLog();
+            for (int i = log.size() - 1; i >= Math.max(0, log.size() - 10); i--) {
+                ImGui.textWrapped(log.get(i));
+            }
+            ImGui.endChild();
+        }
+        ImGui.end();
+    }
+
+    private static void renderConceptArenaPanel(PhiWorld world) {
+        ImGui.setNextWindowPos(360, 730, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 260, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Concept Arena")) {
+            ConceptArena arena = world.getArena();
+
+            ImGui.textColored(1.0f, 0.4f, 0.8f, 1.0f, "CODE CONCEPT EVOLUTION");
+            ImGui.separator();
+
+            ImGui.text(String.format("Concepts: %d | Battles: %d | Cycles: %d",
+                arena.getConceptCount(), arena.getTotalBattles(), arena.getEvolutionCycle()));
+            ImGui.text(String.format("Total Generated: %d | Avg Fitness: %.3f",
+                arena.getTotalConceptsGenerated(), arena.getAverageFitness()));
+
+            CodeConcept champ = arena.getChampion();
+            if (champ != null) {
+                ImGui.separator();
+                ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "CHAMPION:");
+                float[] cc = champ.creatorRole.color;
+                ImGui.textColored(cc[0], cc[1], cc[2], 1.0f,
+                    String.format("  %s (%s) by %s", champ.hash.substring(0, 8), champ.creatorRole.displayName, champ.creatorName));
+                ImGui.text(String.format("  Fitness: %.4f | Gen: %d | W/L: %d/%d",
+                    champ.fitness, champ.generation, champ.wins, champ.losses));
+                ImGui.text(String.format("  Freq: %.1f Hz | Res: %.3f | Coh: %.3f",
+                    champ.harmonicFrequency, champ.resonance, champ.coherence));
+
+                ImGui.separator();
+                ImGui.text("Champion Code:");
+                ImGui.beginChild("ChampCode", 0, 40, true, ImGuiWindowFlags.HorizontalScrollbar);
+                String code = champ.code;
+                if (code != null && code.length() > 120) code = code.substring(0, 120) + "...";
+                ImGui.textColored(0.4f, 1.0f, 0.8f, 1.0f, code != null ? code : "");
+                ImGui.endChild();
+            }
+
+            ImGui.separator();
+            ImGui.text("Recent Battles:");
+            ImGui.beginChild("BattleScroll", 0, 60, false, ImGuiWindowFlags.HorizontalScrollbar);
+            List<ConceptArena.BattleRecord> battles = arena.getLastNBattles(10);
+            for (int i = battles.size() - 1; i >= 0; i--) {
+                ConceptArena.BattleRecord br = battles.get(i);
+                float[] wc = br.winnerRole.color;
+                ImGui.textColored(wc[0], wc[1], wc[2], 1.0f, br.getSummary());
+            }
+            ImGui.endChild();
+        }
+        ImGui.end();
+    }
+
+    private static void renderLiveLog() {
+        ImGui.setNextWindowPos(710, 730, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(560, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Live Log")) {
             if (ImGui.button("Clear")) {

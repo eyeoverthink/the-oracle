@@ -31,6 +31,9 @@ public class PhiNode {
     public long lastUpdateNanos;
     public boolean spikeFlash;
 
+    private AntRole role;
+    private CodeConcept lastGeneratedConcept;
+
     public PhiNode(String name, float x, float y, float freq, LivingDNA dna, LogicBrain brain) {
         this.name = name;
         this.x = x;
@@ -69,6 +72,9 @@ public class PhiNode {
         this.size = baseSize;
         this.pulse = 0;
         this.spikeFlash = false;
+
+        this.role = AntRole.assignFromFrequency(this.frequency);
+        this.lastGeneratedConcept = null;
 
         this.lastUpdateNanos = System.nanoTime();
     }
@@ -167,6 +173,11 @@ public class PhiNode {
     public AdaptiveLogicEngine getAdaptiveEngine() { return adaptiveEngine; }
     public String getName() { return name; }
 
+    public AntRole getRole() { return role; }
+    public void setRole(AntRole role) { this.role = role; }
+    public CodeConcept getLastGeneratedConcept() { return lastGeneratedConcept; }
+    public void setLastGeneratedConcept(CodeConcept concept) { this.lastGeneratedConcept = concept; }
+
     public String toJavaCode() {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("// Living Entity: %s\n", name));
@@ -188,7 +199,7 @@ public class PhiNode {
     public String toString() {
         String status = isAlive() ? "ALIVE" : "DEAD";
         String spike = spikeFlash ? " [SPIKE!]" : "";
-        return String.format("[NODE %s] Pos:(%.2f, %.2f) Freq:%.2f Phase:%.2f Energy:%.1f%% Phi:%.3f Brain:%s [%s]%s",
-                name, x, y, frequency, phase, energy * 100, phiResonance, brain.getLastDecision(), status, spike);
+        return String.format("[NODE %s] Role:%s Pos:(%.2f, %.2f) Freq:%.2f Phase:%.2f Energy:%.1f%% Phi:%.3f Brain:%s [%s]%s",
+                name, role.displayName, x, y, frequency, phase, energy * 100, phiResonance, brain.getLastDecision(), status, spike);
     }
 }

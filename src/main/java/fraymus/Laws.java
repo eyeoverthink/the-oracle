@@ -169,6 +169,11 @@ public class Laws {
             int[] outputs = n.brain.compute(sensors);
             String decision = n.brain.interpretOutputs(outputs);
 
+            double roleBonus = n.getRole().getSpecializationBonus(outputs);
+            if (roleBonus > 0) {
+                n.boostEnergy((float)(roleBonus * dt));
+            }
+
             n.adaptiveEngine.recordFitnessSample(n.energy, spikeActive, nearbyEntangled, false);
 
             AdaptiveLogicEngine.TrialResult trialResult = n.adaptiveEngine.tickTrial(n.brain);
@@ -278,6 +283,11 @@ public class Laws {
             PhiNode child = n.reproduce(null, childName, n.x + offsetX, n.y + offsetY);
             child.vx = offsetX * 0.5f;
             child.vy = offsetY * 0.5f;
+
+            ColonyCoach coach = world.getCoach();
+            if (coach != null) {
+                child.setRole(coach.suggestRoleForChild(n));
+            }
 
             world.addNode(child);
 
