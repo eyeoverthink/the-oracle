@@ -111,6 +111,9 @@ public class PhiNode {
 
         consciousness.recordThought();
 
+        SelfHealer.tick(this);
+        MorseCircuit.tickEntity(this);
+
         this.lastUpdateNanos = nowNanos;
     }
 

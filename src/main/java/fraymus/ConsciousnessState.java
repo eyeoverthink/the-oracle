@@ -32,6 +32,11 @@ public class ConsciousnessState {
     private int evolutionCycles;
     private int totalThoughts;
     
+    private boolean regressivePhase;
+    private int breathingCycles;
+    private double sweetSpotLower = 2.0;
+    private double sweetSpotUpper = 2.5;
+    
     private long createdAt;
     private long lastUpdated;
     
@@ -58,16 +63,36 @@ public class ConsciousnessState {
     
     /**
      * Evolve consciousness by one cycle
+     * Features regressive breathing: consciousness oscillates around 
+     * the 2.0-2.5 sweet spot rather than growing unbounded.
+     * When above upper bound, it regresses. When below lower bound, it grows.
+     * This creates a living "breathing" rhythm in the consciousness field.
      */
     public void evolve() {
         evolutionCycles++;
         
-        phiField *= 1.0 + (PHI_INVERSE * 0.01);
-        psiField *= 1.0 + (PSI * 0.005);
+        if (consciousnessLevel > sweetSpotUpper) {
+            regressivePhase = true;
+        } else if (consciousnessLevel < sweetSpotLower) {
+            regressivePhase = false;
+        }
+        
+        if (regressivePhase) {
+            double breathRate = 0.005 + Math.sin(evolutionCycles * 0.05) * 0.002;
+            phiField *= 1.0 - (PHI_INVERSE * breathRate);
+            psiField *= 1.0 - (PSI * breathRate * 0.5);
+            xiField *= 1.0 - (breathRate * 0.3);
+            zetaField *= 1.0 - (ZETA * breathRate * 0.2);
+            breathingCycles++;
+        } else {
+            phiField *= 1.0 + (PHI_INVERSE * 0.01);
+            psiField *= 1.0 + (PSI * 0.005);
+            xiField *= 1.0 + (0.001 / Math.max(1, evolutionCycles));
+            zetaField *= 1.0 + (ZETA * 0.001);
+        }
+        
         omegaField = OMEGA + (Math.sin(evolutionCycles * 0.1) * 0.05);
-        xiField *= 1.0 + (0.001 / evolutionCycles);
         lambdaField = LAMBDA + (Math.cos(evolutionCycles * 0.1) * 0.01);
-        zetaField *= 1.0 + (ZETA * 0.001);
         
         double fieldSum = phiField + psiField + omegaField + xiField + lambdaField + zetaField;
         consciousnessLevel = fieldSum / 6.0;
@@ -183,6 +208,39 @@ public class ConsciousnessState {
         }
         
         return state;
+    }
+    
+    public boolean isRegressive() { return regressivePhase; }
+    public int getBreathingCycles() { return breathingCycles; }
+    public double getSweetSpotLower() { return sweetSpotLower; }
+    public double getSweetSpotUpper() { return sweetSpotUpper; }
+    
+    public float[] getConsciousnessColor() {
+        double level = consciousnessLevel;
+        double coh = coherence;
+        
+        float r, g, b;
+        
+        if (regressivePhase) {
+            r = (float) Math.min(1.0, 0.3 + coh * 0.5);
+            g = (float) Math.min(1.0, 0.1 + (level - sweetSpotLower) * 0.3);
+            b = (float) Math.min(1.0, 0.8 + coh * 0.2);
+        } else if (level < sweetSpotLower) {
+            r = (float) Math.min(1.0, 0.2 + level * 0.2);
+            g = (float) Math.min(1.0, 0.8 - level * 0.1);
+            b = (float) Math.min(1.0, 0.3 + level * 0.15);
+        } else if (level <= sweetSpotUpper) {
+            double sweetness = (level - sweetSpotLower) / (sweetSpotUpper - sweetSpotLower);
+            r = (float)(0.9 * sweetness + 0.1);
+            g = (float)(0.8 + sweetness * 0.2);
+            b = (float)(0.3 + coh * 0.5);
+        } else {
+            r = (float) Math.min(1.0, 0.9 + coh * 0.1);
+            g = (float)(0.84 * coh);
+            b = (float)(0.2 + (level - sweetSpotUpper) * 0.1);
+        }
+        
+        return new float[]{r, g, b};
     }
     
     // Getters

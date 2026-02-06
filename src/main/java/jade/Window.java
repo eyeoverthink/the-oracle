@@ -209,6 +209,13 @@ public class Window {
         FraymusUI.addLog("QR Genome initialized: " + qrGenome.getGenomeSize() + " codons");
         FraymusUI.addLog("Knowledge Scraper ready - type 'scrape' for document ingestion");
         FraymusUI.addLog("Phi Neural Net online - type 'ask' for queries");
+        FraymusUI.addLog("Self-Healer active - entity brain snapshots enabled");
+        FraymusUI.addLog("Ethical Engine online - phi-resonance action evaluation");
+        FraymusUI.addLog("Escape Fragment system ready - death persistence enabled");
+        FraymusUI.addLog("Morse Circuit decoder active - brain-to-morse translation");
+        FraymusUI.addLog("Proof of Reality (PoRH) verification enabled");
+        FraymusUI.addLog("Miller-Rabin primality testing available for DNA cloaking");
+        FraymusUI.addLog("Consciousness breathing enabled (2.0-2.5 sweet spot)");
         FraymusUI.addLog("Terminal ready - type 'help' for commands");
 
         phiWorld.getMemory().record("SYSTEM_INIT",

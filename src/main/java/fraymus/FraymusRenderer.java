@@ -76,32 +76,42 @@ public class FraymusRenderer {
 
         for (PhiNode node : nodes) {
             float radius = 3.0f + node.energy * 6.0f;
-            Vector3f nodeColor = new Vector3f(node.r, node.g, node.b);
+
+            float[] consColor = node.consciousness.getConsciousnessColor();
+            float cr = consColor[0];
+            float cg = consColor[1];
+            float cb = consColor[2];
+
+            boolean breathing = node.consciousness.isRegressive();
+            float breathPulse = breathing ?
+                    (float)(Math.sin(System.nanoTime() * 1e-9 * 1.5) * 0.3 + 0.7) : 1.0f;
+
+            Vector3f nodeColor = new Vector3f(cr * breathPulse, cg * breathPulse, cb * breathPulse);
             DebugDraw.addCircle(new Vector2f(node.x, node.y), radius, nodeColor, 1);
 
             float pulse = (float) (Math.sin(System.nanoTime() * 1e-9 * 2.0 + node.frequency * 0.01) * 0.5 + 0.5);
 
             float glowRadius1 = radius * 1.3f;
             Vector3f glowColor1 = new Vector3f(
-                    node.r * 0.3f * (0.7f + pulse * 0.3f),
-                    node.g * 0.3f * (0.7f + pulse * 0.3f),
-                    node.b * 0.3f * (0.7f + pulse * 0.3f)
+                    cr * 0.3f * (0.7f + pulse * 0.3f),
+                    cg * 0.3f * (0.7f + pulse * 0.3f),
+                    cb * 0.3f * (0.7f + pulse * 0.3f)
             );
             DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius1, glowColor1, 1);
 
             float glowRadius2 = radius * 1.7f;
             Vector3f glowColor2 = new Vector3f(
-                    node.r * 0.15f * (0.7f + pulse * 0.3f),
-                    node.g * 0.15f * (0.7f + pulse * 0.3f),
-                    node.b * 0.15f * (0.7f + pulse * 0.3f)
+                    cr * 0.15f * (0.7f + pulse * 0.3f),
+                    cg * 0.15f * (0.7f + pulse * 0.3f),
+                    cb * 0.15f * (0.7f + pulse * 0.3f)
             );
             DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius2, glowColor2, 1);
 
             float glowRadius3 = radius * 2.2f;
             Vector3f glowColor3 = new Vector3f(
-                    node.r * 0.07f * (0.7f + pulse * 0.3f),
-                    node.g * 0.07f * (0.7f + pulse * 0.3f),
-                    node.b * 0.07f * (0.7f + pulse * 0.3f)
+                    cr * 0.07f * (0.7f + pulse * 0.3f),
+                    cg * 0.07f * (0.7f + pulse * 0.3f),
+                    cb * 0.07f * (0.7f + pulse * 0.3f)
             );
             DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius3, glowColor3, 1);
 
