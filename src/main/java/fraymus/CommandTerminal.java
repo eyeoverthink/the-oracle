@@ -184,6 +184,21 @@ public class CommandTerminal {
             case "colony":
                 showColony();
                 break;
+            case "ask":
+                handleAsk(args);
+                break;
+            case "learn":
+                handleLearn(args);
+                break;
+            case "memory":
+                handleMemory(args);
+                break;
+            case "genome":
+                handleGenome(args);
+                break;
+            case "qrcode":
+                handleQRCode(args);
+                break;
             case "clear":
                 outputLines.clear();
                 printBanner();
@@ -225,6 +240,21 @@ public class CommandTerminal {
         print("  arena               Show concept arena status");
         print("  codegen             Trigger code generation cycle");
         print("");
+        printColored("--- NEURAL / LEARNING ---", 0.5f, 0.8f, 1.0f);
+        print("  ask <question>      Query the phi neural network");
+        print("  learn [force]       Show passive learner status / force integration");
+        print("  memory              Show infinite memory status");
+        print("  memory search <q>   Search memory records");
+        print("  memory save         Force save to disk");
+        print("");
+        printColored("--- GENOME / DNA ---", 0.5f, 0.8f, 1.0f);
+        print("  genome              Show QR genome status");
+        print("  genome evolve       Evolve the genome");
+        print("  genome mutate       Random mutation");
+        print("  genome crossover    Random crossover");
+        print("  genome encode       Show encoded genome");
+        print("  qrcode [name]       Encode entity DNA payload");
+        print("");
         printColored("--- PHYSICS ---", 0.5f, 0.8f, 1.0f);
         print("  physics gravity <f> Set gravity force");
         print("  physics speed <f>   Set simulation speed multiplier");
@@ -257,6 +287,26 @@ public class CommandTerminal {
         print(String.format("  Colony Health: %.2f | Diversity: %.1f%%",
                 coach.getColonyHealth(), coach.getColonyDiversity() * 100));
         print(String.format("  Code Generated: %d", coach.getTotalCodeGenerated()));
+
+        InfiniteMemory mem = jade.Window.getInfiniteMemory();
+        if (mem != null) {
+            print(String.format("  Infinite Memory: %d records", mem.getRecordCount()));
+        }
+        PassiveLearner pl = jade.Window.getPassiveLearner();
+        if (pl != null) {
+            print(String.format("  Passive Learner: %d cycles, %d patterns",
+                    pl.getPassiveCycles(), pl.getLearnedPatterns()));
+        }
+        PhiNeuralNet net = jade.Window.getNeuralNet();
+        if (net != null) {
+            print(String.format("  Neural Net: %d queries, avg_res=%.4f",
+                    net.getQueriesProcessed(), net.getAvgResonance()));
+        }
+        QRGenome genome = jade.Window.getQRGenome();
+        if (genome != null) {
+            print(String.format("  QR Genome: %d codons, gen=%d",
+                    genome.getGenomeSize(), genome.getGenerationCount()));
+        }
     }
 
     private static void showNodes() {
@@ -482,5 +532,30 @@ public class CommandTerminal {
     private static void handlePhysics(String args) {
         if (experimentManager == null) { printError("Experiment manager not ready"); return; }
         experimentManager.runPhysicsCommand(args);
+    }
+
+    private static void handleAsk(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runAsk(args);
+    }
+
+    private static void handleLearn(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runLearn(args);
+    }
+
+    private static void handleMemory(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runMemory(args);
+    }
+
+    private static void handleGenome(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runGenome(args);
+    }
+
+    private static void handleQRCode(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runQRCode(args);
     }
 }

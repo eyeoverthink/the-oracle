@@ -6,12 +6,21 @@ import java.util.List;
 public class ExperimentManager {
 
     private final PhiWorld world;
+    private final InfiniteMemory infiniteMemory;
+    private final PassiveLearner passiveLearner;
+    private final PhiNeuralNet neuralNet;
+    private final QRGenome qrGenome;
     private float gravityForce = 0.0f;
     private float speedMultiplier = 1.0f;
     private boolean boundaryEnabled = true;
 
-    public ExperimentManager(PhiWorld world) {
+    public ExperimentManager(PhiWorld world, InfiniteMemory infiniteMemory,
+                              PassiveLearner passiveLearner, PhiNeuralNet neuralNet, QRGenome qrGenome) {
         this.world = world;
+        this.infiniteMemory = infiniteMemory;
+        this.passiveLearner = passiveLearner;
+        this.neuralNet = neuralNet;
+        this.qrGenome = qrGenome;
     }
 
     public void runPrimeTest(String args) {
@@ -453,6 +462,237 @@ public class ExperimentManager {
         CommandTerminal.print("  physics explode      Scatter all entities");
         CommandTerminal.print("  physics collapse     Pull to center");
     }
+
+    public void runAsk(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printError("Usage: ask <question>");
+            return;
+        }
+        CommandTerminal.printHighlight("=== PHI NEURAL NET ===");
+        CommandTerminal.printInfo("Processing query through phi-harmonic field...");
+
+        List<PhiNode> nodes = world.getNodes();
+        PhiNeuralNet.NeuralResponse result = neuralNet.process(args, nodes);
+
+        CommandTerminal.printColored(result.response, 0.4f, 1.0f, 0.8f);
+        CommandTerminal.print(String.format("  Resonance: %.4f | Confidence: %.1f%%",
+                result.resonance, result.confidence * 100));
+        CommandTerminal.print(String.format("  Pattern Strength: %.4f | Circuit: %s (%.4f)",
+                result.patternStrength, result.circuitName.isEmpty() ? "none" : result.circuitName, result.circuitResonance));
+        if (!result.detectedTopics.isEmpty()) {
+            CommandTerminal.printInfo("  Topics: " + String.join(", ", result.detectedTopics));
+        }
+
+        FraymusUI.addLog(String.format("[NEURAL] Q: %s | Res: %.3f",
+                args.substring(0, Math.min(30, args.length())), result.resonance));
+
+        if (world.getMemory() != null) {
+            world.getMemory().record("NEURAL_QUERY",
+                    String.format("q=%s|res=%.4f|conf=%.4f",
+                            args.substring(0, Math.min(40, args.length())),
+                            result.resonance, result.confidence));
+        }
+    }
+
+    public void runLearn(String args) {
+        CommandTerminal.printHighlight("=== PASSIVE LEARNER STATUS ===");
+        CommandTerminal.print(String.format("  Running: %s", passiveLearner.isRunning() ? "YES" : "NO"));
+        CommandTerminal.print(String.format("  Passive Cycles: %d", passiveLearner.getPassiveCycles()));
+        CommandTerminal.print(String.format("  Learned Patterns: %d", passiveLearner.getLearnedPatterns()));
+        CommandTerminal.print(String.format("  Pattern Strength: %.6f", passiveLearner.getPatternStrength()));
+        CommandTerminal.print(String.format("  Integration Level: %.6f", passiveLearner.getIntegrationLevel()));
+
+        int[] dims = passiveLearner.getTensorDims();
+        CommandTerminal.print(String.format("  Tensor Dimensions: %dx%dx%d = %d weights",
+                dims[0], dims[1], dims[2], dims[0] * dims[1] * dims[2]));
+        CommandTerminal.print(String.format("  Tensor Mean: %.6f | Max: %.6f",
+                passiveLearner.getTensorMean(), passiveLearner.getTensorMax()));
+
+        if (!args.isEmpty()) {
+            CommandTerminal.printInfo("Integrating entity states into neural tensor...");
+            int count = 0;
+            for (PhiNode node : world.getNodes()) {
+                passiveLearner.integrateEntityState(node);
+                count++;
+            }
+            CommandTerminal.printSuccess(String.format("Integrated %d entity states", count));
+            FraymusUI.addLog("[LEARNER] Forced integration of " + count + " entity states");
+
+            if (world.getMemory() != null) {
+                world.getMemory().record("LEARNER_INTEGRATE",
+                        String.format("entities=%d|cycles=%d|strength=%.4f",
+                                count, passiveLearner.getPassiveCycles(), passiveLearner.getPatternStrength()));
+            }
+        }
+    }
+
+    public void runMemory(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== INFINITE MEMORY ===");
+            CommandTerminal.print(String.format("  Records: %d (total ever: %d)",
+                    infiniteMemory.getRecordCount(), infiniteMemory.getTotalRecordsEver()));
+            CommandTerminal.print(String.format("  Average Resonance: %.6f", infiniteMemory.getAverageResonance()));
+
+            java.util.Map<String, Integer> counts = infiniteMemory.getCategoryCounts();
+            CommandTerminal.printInfo("  Categories:");
+            for (java.util.Map.Entry<String, Integer> e : counts.entrySet()) {
+                CommandTerminal.print(String.format("    %s: %d records", e.getKey(), e.getValue()));
+            }
+
+            List<InfiniteMemory.MemoryRecord> recent = infiniteMemory.getRecent(5);
+            if (!recent.isEmpty()) {
+                CommandTerminal.printInfo("  Recent:");
+                for (InfiniteMemory.MemoryRecord r : recent) {
+                    CommandTerminal.print("    " + r.toString());
+                }
+            }
+        } else {
+            String query = args.trim();
+            if (query.startsWith("search ")) {
+                String searchTerm = query.substring(7).trim();
+                List<InfiniteMemory.MemoryRecord> results = infiniteMemory.search(searchTerm);
+                CommandTerminal.printHighlight(String.format("Search '%s': %d results", searchTerm, results.size()));
+                for (int i = 0; i < Math.min(10, results.size()); i++) {
+                    CommandTerminal.print("  " + results.get(i).toString());
+                }
+            } else if (query.startsWith("save")) {
+                infiniteMemory.forceSave();
+                CommandTerminal.printSuccess("Memory saved to disk");
+                if (world.getMemory() != null) {
+                    world.getMemory().record("MEMORY_SAVE",
+                            String.format("records=%d", infiniteMemory.getRecordCount()));
+                }
+            } else {
+                CommandTerminal.printError("Usage: memory | memory search <term> | memory save");
+            }
+        }
+    }
+
+    public void runGenome(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== QR GENOME ===");
+            CommandTerminal.print(String.format("  Codons: %d | Groups: %d | Generation: %d",
+                    qrGenome.getGenomeSize(), qrGenome.getGroupCount(), qrGenome.getGenerationCount()));
+            CommandTerminal.print(String.format("  Mutations: %d | Crossovers: %d",
+                    qrGenome.getTotalMutations(), qrGenome.getTotalCrossovers()));
+            CommandTerminal.print(String.format("  Avg Fitness: %.4f | Total Resonance: %.4f",
+                    qrGenome.getAverageFitness(), qrGenome.getTotalResonance()));
+
+            CommandTerminal.printInfo("  Codon Types:");
+            java.util.Map<QRGenome.CodonType, Integer> counts = qrGenome.getCodonTypeCounts();
+            for (java.util.Map.Entry<QRGenome.CodonType, Integer> e : counts.entrySet()) {
+                if (e.getValue() > 0) {
+                    CommandTerminal.print(String.format("    %s: %d", e.getKey().code, e.getValue()));
+                }
+            }
+
+            CommandTerminal.printInfo("  Groups:");
+            for (QRGenome.CodonGroup g : qrGenome.getGroups()) {
+                CommandTerminal.print(String.format("    %s: %d codons, fitness=%.4f",
+                        g.name, g.codons.size(), g.groupFitness));
+            }
+        } else {
+            String sub = args.trim().toLowerCase();
+            switch (sub) {
+                case "evolve":
+                    qrGenome.evolve();
+                    CommandTerminal.printSuccess(String.format("Genome evolved to generation %d (size=%d, fitness=%.4f)",
+                            qrGenome.getGenerationCount(), qrGenome.getGenomeSize(), qrGenome.getAverageFitness()));
+                    FraymusUI.addLog("[GENOME] Evolution cycle " + qrGenome.getGenerationCount());
+
+                    if (world.getMemory() != null) {
+                        world.getMemory().record("GENOME_EVOLVE",
+                                String.format("gen=%d|size=%d|fit=%.4f",
+                                        qrGenome.getGenerationCount(), qrGenome.getGenomeSize(), qrGenome.getAverageFitness()));
+                    }
+                    break;
+                case "mutate":
+                    QRGenome.Codon mutated = qrGenome.mutateRandom();
+                    if (mutated != null) {
+                        CommandTerminal.printSuccess(String.format("Mutated codon %s [%s] resonance=%.4f",
+                                mutated.id, mutated.type.code, mutated.getPhiResonance()));
+                        if (world.getMemory() != null) {
+                            world.getMemory().record("GENOME_MUTATE",
+                                    String.format("codon=%s|type=%s|res=%.4f", mutated.id, mutated.type.code, mutated.getPhiResonance()));
+                        }
+                    }
+                    break;
+                case "crossover":
+                    QRGenome.Codon child = qrGenome.crossoverRandom();
+                    if (child != null) {
+                        CommandTerminal.printSuccess(String.format("Crossover produced %s [%s] resonance=%.4f",
+                                child.id, child.type.code, child.getPhiResonance()));
+                        if (world.getMemory() != null) {
+                            world.getMemory().record("GENOME_CROSSOVER",
+                                    String.format("child=%s|type=%s|res=%.4f", child.id, child.type.code, child.getPhiResonance()));
+                        }
+                    }
+                    break;
+                case "encode":
+                    String encoded = qrGenome.encodeGenome();
+                    CommandTerminal.printHighlight("Genome Encoding:");
+                    String display = encoded.length() > 200 ? encoded.substring(0, 200) + "..." : encoded;
+                    CommandTerminal.printColored(display, 0.4f, 1.0f, 0.8f);
+                    break;
+                default:
+                    CommandTerminal.printError("Usage: genome | genome evolve | genome mutate | genome crossover | genome encode");
+                    break;
+            }
+        }
+    }
+
+    public void runQRCode(String args) {
+        String entityName = args.isEmpty() ? "" : args.trim();
+        PhiNode target = null;
+
+        if (!entityName.isEmpty()) {
+            for (PhiNode node : world.getNodes()) {
+                if (node.name.equalsIgnoreCase(entityName)) {
+                    target = node;
+                    break;
+                }
+            }
+            if (target == null) {
+                CommandTerminal.printError("Entity not found: " + entityName);
+                return;
+            }
+        } else {
+            List<PhiNode> nodes = world.getNodes();
+            if (!nodes.isEmpty()) target = nodes.get(0);
+        }
+
+        if (target == null) {
+            CommandTerminal.printError("No entities available");
+            return;
+        }
+
+        CommandTerminal.printHighlight(String.format("=== QR DNA PAYLOAD: %s ===", target.name));
+
+        String entityDNA = qrGenome.encodeForEntity(target);
+        String display = entityDNA.length() > 300 ? entityDNA.substring(0, 300) + "..." : entityDNA;
+        CommandTerminal.printColored(display, 0.4f, 1.0f, 0.8f);
+        CommandTerminal.print(String.format("  Payload size: %d chars", entityDNA.length()));
+        CommandTerminal.print(String.format("  Entity: %s [%s] energy=%.0f%% freq=%.1fHz",
+                target.name, target.getRole().displayName, target.energy * 100, target.frequency));
+
+        if (infiniteMemory != null) {
+            infiniteMemory.store(InfiniteMemory.CAT_GENOME,
+                    String.format("qr_encode|entity=%s|size=%d", target.name, entityDNA.length()),
+                    target.phiResonance, target.name);
+        }
+
+        if (world.getMemory() != null) {
+            world.getMemory().record("QR_ENCODE",
+                    String.format("entity=%s|size=%d|res=%.4f", target.name, entityDNA.length(), target.phiResonance));
+        }
+
+        FraymusUI.addLog(String.format("[QR] Encoded %s DNA (%d chars)", target.name, entityDNA.length()));
+    }
+
+    public InfiniteMemory getInfiniteMemory() { return infiniteMemory; }
+    public PassiveLearner getPassiveLearner() { return passiveLearner; }
+    public PhiNeuralNet getNeuralNet() { return neuralNet; }
+    public QRGenome getQRGenome() { return qrGenome; }
 
     public float getGravityForce() { return gravityForce; }
     public float getSpeedMultiplier() { return speedMultiplier; }

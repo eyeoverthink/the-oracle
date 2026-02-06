@@ -22,6 +22,10 @@ public class Window {
     private Camera camera;
     private PhiWorld phiWorld;
     private ExperimentManager experimentManager;
+    private InfiniteMemory infiniteMemory;
+    private PassiveLearner passiveLearner;
+    private PhiNeuralNet neuralNet;
+    private QRGenome qrGenome;
 
     private static Window window = null;
 
@@ -160,13 +164,28 @@ public class Window {
         phiWorld.addNode(delta);
         phiWorld.addNode(epsilon);
 
-        experimentManager = new ExperimentManager(phiWorld);
+        infiniteMemory = new InfiniteMemory();
+        passiveLearner = new PassiveLearner(infiniteMemory);
+        neuralNet = new PhiNeuralNet(passiveLearner, infiniteMemory);
+        qrGenome = new QRGenome(infiniteMemory);
+
+        experimentManager = new ExperimentManager(phiWorld, infiniteMemory, passiveLearner, neuralNet, qrGenome);
         CommandTerminal.init(experimentManager);
+
+        passiveLearner.start();
 
         FraymusUI.addLog("World initialized with 5 PhiNode entities");
         FraymusUI.addLog("Laws: Inertia, Resonance, Entangle, Scott, Spike, Brain, Reproduction, Boundary");
         FraymusUI.addLog("Genesis Memory chain started - recording all events");
+        FraymusUI.addLog("Infinite Memory loaded: " + infiniteMemory.getRecordCount() + " records");
+        FraymusUI.addLog("Passive Learner started: " + passiveLearner.getPassiveCycles() + " prior cycles");
+        FraymusUI.addLog("QR Genome initialized: " + qrGenome.getGenomeSize() + " codons");
+        FraymusUI.addLog("Phi Neural Net online - type 'ask' for queries");
         FraymusUI.addLog("Terminal ready - type 'help' for commands");
+
+        phiWorld.getMemory().record("SYSTEM_INIT",
+                String.format("memory=%d|learner_cycles=%d|genome=%d",
+                        infiniteMemory.getRecordCount(), passiveLearner.getPassiveCycles(), qrGenome.getGenomeSize()));
     }
 
     private void loop() {
@@ -223,6 +242,8 @@ public class Window {
     }
 
     private void cleanup() {
+        if (passiveLearner != null) passiveLearner.stop();
+        if (infiniteMemory != null) infiniteMemory.forceSave();
         imGuiLayer.destroyImGui();
         glfwFreeCallbacks(glfwWindow);
         glfwDestroyWindow(glfwWindow);
@@ -247,6 +268,22 @@ public class Window {
 
     public static PhiWorld getPhiWorld() {
         return get().phiWorld;
+    }
+
+    public static InfiniteMemory getInfiniteMemory() {
+        return get().infiniteMemory;
+    }
+
+    public static PassiveLearner getPassiveLearner() {
+        return get().passiveLearner;
+    }
+
+    public static PhiNeuralNet getNeuralNet() {
+        return get().neuralNet;
+    }
+
+    public static QRGenome getQRGenome() {
+        return get().qrGenome;
     }
 
     public void setWidth(int width) {

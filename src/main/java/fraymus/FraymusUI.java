@@ -65,6 +65,10 @@ public class FraymusUI {
         renderColonyOverview(world);
         renderConceptArenaPanel(world);
         renderSystemVerification(world);
+        renderNeuralNetPanel();
+        renderInfiniteMemoryPanel();
+        renderPassiveLearnerPanel();
+        renderQRGenomePanel();
         renderLiveLog();
         CommandTerminal.render();
     }
@@ -565,6 +569,97 @@ public class FraymusUI {
                 ImGui.textColored(wc[0], wc[1], wc[2], 1.0f, br.getSummary());
             }
             ImGui.endChild();
+        }
+        ImGui.end();
+    }
+
+    private static void renderNeuralNetPanel() {
+        PhiNeuralNet net = jade.Window.getNeuralNet();
+        if (net == null) return;
+
+        ImGui.setNextWindowPos(0, 500, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 120, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Phi Neural Net")) {
+            ImGui.textColored(0.4f, 1.0f, 0.8f, 1.0f, "OFFLINE LLM - PHI HARMONIC");
+            ImGui.separator();
+            ImGui.text(String.format("Queries: %d", net.getQueriesProcessed()));
+            ImGui.text(String.format("Patterns Matched: %d", net.getPatternsMatched()));
+            ImGui.text(String.format("Avg Resonance: %.4f", net.getAvgResonance()));
+            ImGui.textColored(0.5f, 0.8f, 1.0f, 1.0f, "Type 'ask <question>' in terminal");
+        }
+        ImGui.end();
+    }
+
+    private static void renderInfiniteMemoryPanel() {
+        InfiniteMemory mem = jade.Window.getInfiniteMemory();
+        if (mem == null) return;
+
+        ImGui.setNextWindowPos(0, 620, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 120, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Infinite Memory")) {
+            ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "PERSISTENT FILE-BACKED MEMORY");
+            ImGui.separator();
+            ImGui.text(String.format("Records: %d", mem.getRecordCount()));
+            ImGui.text(String.format("Total Ever: %d", mem.getTotalRecordsEver()));
+            ImGui.text(String.format("Avg Resonance: %.4f", mem.getAverageResonance()));
+
+            java.util.Map<String, Integer> counts = mem.getCategoryCounts();
+            if (!counts.isEmpty()) {
+                StringBuilder cats = new StringBuilder();
+                for (java.util.Map.Entry<String, Integer> e : counts.entrySet()) {
+                    if (cats.length() > 0) cats.append(" ");
+                    cats.append(e.getKey().charAt(0)).append(":").append(e.getValue());
+                }
+                ImGui.textColored(0.6f, 0.6f, 0.6f, 1.0f, cats.toString());
+            }
+        }
+        ImGui.end();
+    }
+
+    private static void renderPassiveLearnerPanel() {
+        PassiveLearner pl = jade.Window.getPassiveLearner();
+        if (pl == null) return;
+
+        ImGui.setNextWindowPos(300, 680, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 120, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Passive Learner")) {
+            ImGui.textColored(0.5f, 0.8f, 1.0f, 1.0f, "5x8x13 NEURAL TENSOR");
+            ImGui.separator();
+
+            if (pl.isRunning()) {
+                ImGui.textColored(0.0f, 1.0f, 0.3f, 1.0f, "LEARNING ACTIVE");
+            } else {
+                ImGui.textColored(1.0f, 0.3f, 0.3f, 1.0f, "STOPPED");
+            }
+
+            ImGui.text(String.format("Cycles: %d", pl.getPassiveCycles()));
+            ImGui.text(String.format("Patterns: %d", pl.getLearnedPatterns()));
+            ImGui.text(String.format("Strength: %.4f", pl.getPatternStrength()));
+            ImGui.text(String.format("Integration: %.4f", pl.getIntegrationLevel()));
+            ImGui.text(String.format("Tensor: mean=%.4f max=%.4f", pl.getTensorMean(), pl.getTensorMax()));
+        }
+        ImGui.end();
+    }
+
+    private static void renderQRGenomePanel() {
+        QRGenome genome = jade.Window.getQRGenome();
+        if (genome == null) return;
+
+        ImGui.setNextWindowPos(610, 680, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 120, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("QR Genome")) {
+            ImGui.textColored(1.0f, 0.5f, 0.0f, 1.0f, "QR DNA CODON SYSTEM");
+            ImGui.separator();
+            ImGui.text(String.format("Codons: %d | Groups: %d", genome.getGenomeSize(), genome.getGroupCount()));
+            ImGui.text(String.format("Generation: %d", genome.getGenerationCount()));
+            ImGui.text(String.format("Mutations: %d | Crossovers: %d",
+                    genome.getTotalMutations(), genome.getTotalCrossovers()));
+            ImGui.text(String.format("Fitness: %.4f | Resonance: %.4f",
+                    genome.getAverageFitness(), genome.getTotalResonance()));
         }
         ImGui.end();
     }
