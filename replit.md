@@ -27,6 +27,7 @@ An ImGui-based command terminal at the bottom of the screen allows real-time int
 - **Hash Experiments**: `hash`, `crack` - phi-harmonic hashing and hash reversal attempts
 - **Entity Control**: `spawn`, `boost`, `kill`, `mutate` - direct entity manipulation
 - **Code Evolution**: `evolve`, `arena`, `codegen` - force arena evolution and code generation
+- **Knowledge Scraping**: `scrape all`, `scrape <file>`, `scrape search <q>`, `scrape topic <name>` - document ingestion and knowledge retrieval
 - **Physics**: `physics gravity/speed/chaos/freeze/explode/collapse` - physics manipulation
 
 ### Technical Implementation
@@ -64,6 +65,9 @@ QR codon/DNA genome system with 13 codon types (START, STOP, LOGIC, MATH, MEMORY
 #### Infinite Memory (InfiniteMemory.java)
 Persistent file-backed categorized memory system. 8 categories: EVENT, PATTERN, KNOWLEDGE, CODE, QUESTION, ANSWER, GENOME, LEARNING. Phi-resonance indexed retrieval, base64-encoded content serialization, auto-save to data/infinite_memory.dat. Survives restarts. Terminal command: `memory [search <q>|save]`.
 
+#### Knowledge Scraper (KnowledgeScraper.java)
+Document intelligence system using Apache PDFBox for PDF extraction plus text/code file reading. Scans attached_assets/ directory for PDFs, Python files, text files, HTML, JSON, and more. Extracts text, breaks into 200-word overlapping chunks, detects topics across 8 knowledge domains (physics, quantum, mathematics, programming, language, consciousness, evolution, cryptography). Stores knowledge chunks in InfiniteMemory (KNOWLEDGE category), feeds them to PassiveLearner tensor for pattern integration, and makes scraped knowledge available to PhiNeuralNet for enriched responses. Runs on background thread for non-blocking operation. Records scrape events to GenesisMemory blockchain. Terminal commands: `scrape`, `scrape all`, `scrape <file>`, `scrape search <q>`, `scrape topic <name>`.
+
 ### Recent Changes (Feb 2026)
 - Added PhiNeuralNet.java - Offline phi-harmonic text generation (no API keys)
 - Added PassiveLearner.java - 5x8x13 neural tensor with binary .dat persistence
@@ -78,10 +82,17 @@ Persistent file-backed categorized memory system. 8 categories: EVENT, PATTERN, 
 - Added HashReverser.java - Phi-harmonic hash computation and reversal attempts
 - Integrated terminal into FraymusUI, replacing standalone Live Log position
 - Reorganized panel layout: terminal at bottom, live log moved to sidebar
+- Added KnowledgeScraper.java - PDF/text document scraping with PDFBox, topic detection, InfiniteMemory/PassiveLearner/PhiNeuralNet integration
+- Added Knowledge Scraper ImGui panel (5th panel in subsystem row)
+- PhiNeuralNet enhanced to query scraped knowledge for enriched responses
+- Subsystem panel row resized from 4 panels (235px each) to 5 panels (188px each)
+- Terminal commands extended with: scrape, scrape all, scrape search, scrape topic
+- ExperimentManager and Window.java updated to initialize and route KnowledgeScraper
 
 ## External Dependencies
 - **Gradle**: Build automation system.
 - **LWJGL 3.3.3**: For GLFW (windowing), OpenGL, and stb (image loading).
 - **imgui-java 1.86.11**: For GUI creation.
 - **JOML 1.10.5**: Java OpenGL Math Library for 3D math operations.
+- **Apache PDFBox 2.0.31**: PDF text extraction for Knowledge Scraper document ingestion.
 - **Mesa software renderer (llvmpipe)**: Used for OpenGL rendering in a headless environment.

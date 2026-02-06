@@ -199,6 +199,9 @@ public class CommandTerminal {
             case "qrcode":
                 handleQRCode(args);
                 break;
+            case "scrape":
+                handleScrape(args);
+                break;
             case "clear":
                 outputLines.clear();
                 printBanner();
@@ -255,6 +258,13 @@ public class CommandTerminal {
         print("  genome encode       Show encoded genome");
         print("  qrcode [name]       Encode entity DNA payload");
         print("");
+        printColored("--- KNOWLEDGE SCRAPING ---", 0.5f, 0.8f, 1.0f);
+        print("  scrape              Show scraper status");
+        print("  scrape all          Scrape all attached files (PDFs, text, code)");
+        print("  scrape <file>       Scrape a specific file");
+        print("  scrape search <q>   Search scraped knowledge");
+        print("  scrape topic <name> Get knowledge on a topic");
+        print("");
         printColored("--- PHYSICS ---", 0.5f, 0.8f, 1.0f);
         print("  physics gravity <f> Set gravity force");
         print("  physics speed <f>   Set simulation speed multiplier");
@@ -306,6 +316,11 @@ public class CommandTerminal {
         if (genome != null) {
             print(String.format("  QR Genome: %d codons, gen=%d",
                     genome.getGenomeSize(), genome.getGenerationCount()));
+        }
+        KnowledgeScraper scraper = jade.Window.getKnowledgeScraper();
+        if (scraper != null) {
+            print(String.format("  Knowledge Scraper: %d files, %d chunks, %d pages",
+                    scraper.getTotalFilesScraped(), scraper.getTotalChunksStored(), scraper.getTotalPagesProcessed()));
         }
     }
 
@@ -557,5 +572,10 @@ public class CommandTerminal {
     private static void handleQRCode(String args) {
         if (experimentManager == null) { printError("Experiment manager not ready"); return; }
         experimentManager.runQRCode(args);
+    }
+
+    private static void handleScrape(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runScrape(args);
     }
 }
