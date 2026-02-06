@@ -50,11 +50,32 @@ An ImGui-based command terminal at the bottom of the screen allows real-time int
 - **Role-based Specialization**: Entities gain energy bonuses when their brain output aligns with their assigned role.
 - **Terminal-First Interaction**: User interacts via command terminal for experiments rather than buttons.
 
+### New Subsystems (Feb 2026)
+
+#### Phi Neural Net (PhiNeuralNet.java)
+Offline LLM-like text generation system - no API keys needed. Uses phi-harmonic pattern matching, topic detection across 10 knowledge domains, and LogicBrain circuit resonance to generate contextual responses. Integrates with PassiveLearner for improved responses over time. Terminal command: `ask <question>`.
+
+#### Passive Learner (PassiveLearner.java)
+5x8x13 phi-resonant neural tensor with binary .dat file persistence. Background daemon thread refines patterns every 500ms. Integrates entity states (frequency, energy, resonance, coherence, consciousness) and Q&A interactions into the tensor. Auto-saves every 60 seconds. Terminal command: `learn [force]`.
+
+#### QR Genome (QRGenome.java)
+QR codon/DNA genome system with 13 codon types (START, STOP, LOGIC, MATH, MEMORY, SIGNAL, SENSOR, MUTATE, ENERGY, RESONANCE, QUANTUM, CONSCIOUSNESS, IDENTITY). Codons organized into functional groups (SensorArray, Processing, HarmonicCore, QuantumField). Supports mutation, crossover, evolution, phi-harmonic fitness evaluation, and entity-specific DNA encoding. Terminal commands: `genome [evolve|mutate|crossover|encode]`, `qrcode [name]`.
+
+#### Infinite Memory (InfiniteMemory.java)
+Persistent file-backed categorized memory system. 8 categories: EVENT, PATTERN, KNOWLEDGE, CODE, QUESTION, ANSWER, GENOME, LEARNING. Phi-resonance indexed retrieval, base64-encoded content serialization, auto-save to data/infinite_memory.dat. Survives restarts. Terminal command: `memory [search <q>|save]`.
+
 ### Recent Changes (Feb 2026)
-- Added CommandTerminal.java - ImGui interactive terminal with 20+ commands
+- Added PhiNeuralNet.java - Offline phi-harmonic text generation (no API keys)
+- Added PassiveLearner.java - 5x8x13 neural tensor with binary .dat persistence
+- Added QRGenome.java - QR codon/genome system with mutation and evolution
+- Added InfiniteMemory.java - Persistent file-backed memory with 8 categories
+- Added 4 new ImGui panels: Neural Net, Infinite Memory, Passive Learner, QR Genome
+- Extended terminal with 10+ new commands: ask, learn, memory, genome, qrcode
+- Window.java now initializes all subsystems, saves state on cleanup
+- ExperimentManager accepts all subsystems, routes new commands
+- CommandTerminal.java - ImGui interactive terminal with 30+ commands
 - Added QuantumTunneler.java - Circuit-driven Pollard's Rho factorization
 - Added HashReverser.java - Phi-harmonic hash computation and reversal attempts
-- Added ExperimentManager.java - Routes all terminal commands to subsystems
 - Integrated terminal into FraymusUI, replacing standalone Live Log position
 - Reorganized panel layout: terminal at bottom, live log moved to sidebar
 
