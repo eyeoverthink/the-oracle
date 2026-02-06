@@ -9,11 +9,13 @@ import java.util.*;
 
 public class FraymusRenderer {
 
-    private static final int MAX_TRAIL_LENGTH = 30;
+    private static final int MAX_TRAIL_LENGTH = 60;
     private static Map<String, List<Vector2f>> trailHistory = new HashMap<>();
 
     public static void render(PhiWorld world, Camera camera) {
         List<PhiNode> nodes = world.getNodes();
+
+        renderBackgroundGrid();
 
         for (PhiNode node : nodes) {
             String key = node.name;
@@ -36,9 +38,9 @@ public class FraymusRenderer {
                 for (int i = 0; i < trail.size() - 1; i++) {
                     float alpha = (float) i / trail.size();
                     Vector3f trailColor = new Vector3f(
-                            node.r * alpha * 0.5f,
-                            node.g * alpha * 0.5f,
-                            node.b * alpha * 0.5f
+                            node.r * alpha * 0.8f,
+                            node.g * alpha * 0.8f,
+                            node.b * alpha * 0.8f
                     );
                     DebugDraw.addLine2D(
                             new Vector2f(trail.get(i)),
@@ -53,14 +55,15 @@ public class FraymusRenderer {
             for (int j = i + 1; j < nodes.size(); j++) {
                 PhiNode a = nodes.get(i);
                 PhiNode b = nodes.get(j);
-                float freqDiff = Math.abs(a.frequency - b.frequency);
-                if (freqDiff < 10.0f) {
-                    float phaseDiff = Math.abs(a.phase - b.phase);
-                    float intensity = 1.0f - Math.min(phaseDiff / (float) Math.PI, 1.0f);
+                float dx = a.x - b.x;
+                float dy = a.y - b.y;
+                float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100.0f) {
+                    float alpha = 1.0f - dist / 100.0f;
                     Vector3f lineColor = new Vector3f(
-                            (a.r + b.r) * 0.5f * intensity,
-                            (a.g + b.g) * 0.5f * intensity,
-                            (a.b + b.b) * 0.5f * intensity
+                            0.2f * alpha,
+                            0.8f * alpha,
+                            0.6f * alpha
                     );
                     DebugDraw.addLine2D(
                             new Vector2f(a.x, a.y),
@@ -72,35 +75,59 @@ public class FraymusRenderer {
         }
 
         for (PhiNode node : nodes) {
-            float radius = 0.5f + node.energy * 2.0f;
+            float radius = 3.0f + node.energy * 6.0f;
             Vector3f nodeColor = new Vector3f(node.r, node.g, node.b);
             DebugDraw.addCircle(new Vector2f(node.x, node.y), radius, nodeColor, 1);
 
-            float phaseGlow = (float) (Math.sin(node.phase) * 0.5 + 0.5);
-            float glowRadius = radius * (1.2f + phaseGlow * 0.3f);
-            Vector3f glowColor = new Vector3f(
-                    node.r * 0.3f,
-                    node.g * 0.3f,
-                    node.b * 0.3f
+            float pulse = (float) (Math.sin(System.nanoTime() * 1e-9 * 2.0 + node.frequency * 0.01) * 0.5 + 0.5);
+
+            float glowRadius1 = radius * 1.3f;
+            Vector3f glowColor1 = new Vector3f(
+                    node.r * 0.3f * (0.7f + pulse * 0.3f),
+                    node.g * 0.3f * (0.7f + pulse * 0.3f),
+                    node.b * 0.3f * (0.7f + pulse * 0.3f)
             );
-            DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius, glowColor, 1);
+            DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius1, glowColor1, 1);
+
+            float glowRadius2 = radius * 1.7f;
+            Vector3f glowColor2 = new Vector3f(
+                    node.r * 0.15f * (0.7f + pulse * 0.3f),
+                    node.g * 0.15f * (0.7f + pulse * 0.3f),
+                    node.b * 0.15f * (0.7f + pulse * 0.3f)
+            );
+            DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius2, glowColor2, 1);
+
+            float glowRadius3 = radius * 2.2f;
+            Vector3f glowColor3 = new Vector3f(
+                    node.r * 0.07f * (0.7f + pulse * 0.3f),
+                    node.g * 0.07f * (0.7f + pulse * 0.3f),
+                    node.b * 0.07f * (0.7f + pulse * 0.3f)
+            );
+            DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius3, glowColor3, 1);
 
             float[] roleColor = node.getRole().color;
-            float roleRadius = radius * 0.5f;
+            float roleRadius = radius * 0.4f;
             DebugDraw.addCircle(new Vector2f(node.x, node.y), roleRadius,
                     new Vector3f(roleColor[0], roleColor[1], roleColor[2]), 1);
 
             if (node.spikeFlash) {
-                float spikeRadius = radius * 2.5f;
-                float pulse = (float)(Math.sin(System.nanoTime() * 1e-8) * 0.5 + 0.5);
-                Vector3f spikeColor = new Vector3f(
-                        1.0f,
-                        pulse * 0.8f,
-                        pulse * 0.3f
-                );
-                DebugDraw.addCircle(new Vector2f(node.x, node.y), spikeRadius, spikeColor, 1);
-                DebugDraw.addCircle(new Vector2f(node.x, node.y), spikeRadius * 1.3f,
-                        new Vector3f(1.0f, 0.5f * pulse, 0.0f), 1);
+                float spikePulse = (float)(Math.sin(System.nanoTime() * 1e-8) * 0.5 + 0.5);
+                float rayLen = radius * 3.0f;
+                for (int r = 0; r < 8; r++) {
+                    float angle = (float)(r * Math.PI / 4.0);
+                    Vector2f rayEnd = new Vector2f(
+                            node.x + (float) Math.cos(angle) * rayLen,
+                            node.y + (float) Math.sin(angle) * rayLen
+                    );
+                    Vector3f rayColor = new Vector3f(
+                            1.0f,
+                            0.6f + spikePulse * 0.4f,
+                            0.1f + spikePulse * 0.2f
+                    );
+                    DebugDraw.addLine2D(new Vector2f(node.x, node.y), rayEnd, rayColor, 1);
+                }
+                DebugDraw.addCircle(new Vector2f(node.x, node.y), radius * 2.5f,
+                        new Vector3f(1.0f, spikePulse * 0.8f, spikePulse * 0.3f), 1);
             }
 
             int[] outputs = node.brain.getLastOutputs();
@@ -126,13 +153,30 @@ public class FraymusRenderer {
                             new Vector3f(1.0f, 0.2f, 0.2f), 1);
                 }
                 if (node.brain.wantsToReproduce(outputs)) {
-                    DebugDraw.addCircle(new Vector2f(node.x, node.y), radius * 0.3f,
+                    float plusSize = radius * 0.5f;
+                    float px = node.x + radius + 2.0f;
+                    float py = node.y;
+                    DebugDraw.addLine2D(new Vector2f(px - plusSize, py), new Vector2f(px + plusSize, py),
                             new Vector3f(0.3f, 1.0f, 0.3f), 1);
+                    DebugDraw.addLine2D(new Vector2f(px, py - plusSize), new Vector2f(px, py + plusSize),
+                            new Vector3f(0.3f, 1.0f, 0.3f), 1);
+                }
+                if (node.brain.wantsToMutate(outputs)) {
+                    float mutSize = radius * 0.4f;
+                    float mx = node.x - radius - 2.0f;
+                    float my = node.y;
+                    DebugDraw.addLine2D(new Vector2f(mx - mutSize, my - mutSize), new Vector2f(mx + mutSize, my + mutSize),
+                            new Vector3f(1.0f, 0.5f, 0.0f), 1);
+                    DebugDraw.addLine2D(new Vector2f(mx - mutSize, my + mutSize), new Vector2f(mx + mutSize, my - mutSize),
+                            new Vector3f(1.0f, 0.5f, 0.0f), 1);
                 }
             }
 
-            float barWidth = 4.0f;
-            float barY = node.y - radius - 1.5f;
+            DebugDraw.addCircle(new Vector2f(node.x, node.y + radius + 2.0f), 0.8f,
+                    new Vector3f(node.r, node.g, node.b), 1);
+
+            float barWidth = 8.0f;
+            float barY = node.y - radius - 3.0f;
             float barX = node.x - barWidth * 0.5f;
             float energyWidth = barWidth * node.energy;
 
@@ -156,6 +200,22 @@ public class FraymusRenderer {
         }
 
         renderBoundary();
+    }
+
+    private static void renderBackgroundGrid() {
+        float minX = -180.0f, maxX = 180.0f, minY = -100.0f, maxY = 100.0f;
+        Vector3f gridColor = new Vector3f(0.08f, 0.08f, 0.15f);
+        float dotSize = 0.3f;
+
+        for (float x = minX; x <= maxX; x += 20.0f) {
+            for (float y = minY; y <= maxY; y += 20.0f) {
+                DebugDraw.addLine2D(
+                        new Vector2f(x - dotSize, y),
+                        new Vector2f(x + dotSize, y),
+                        gridColor, 1
+                );
+            }
+        }
     }
 
     private static void renderBoundary() {

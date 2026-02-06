@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL30.*;
 
 public class DebugDraw {
 
-    private static final int MAX_LINES = 3000;
+    private static final int MAX_LINES = 10000;
     private static final int VERTEX_SIZE = 6;
     private static List<Line2D> lines = new ArrayList<>();
     private static float[] vertexArray = new float[MAX_LINES * 2 * VERTEX_SIZE];
@@ -119,7 +119,7 @@ public class DebugDraw {
     }
 
     public static void addCircle(Vector2f center, float radius, Vector3f color, int lifetime) {
-        int segments = 20;
+        int segments = 32;
         Vector2f[] points = new Vector2f[segments];
         float increment = (float) (2.0f * Math.PI / segments);
 

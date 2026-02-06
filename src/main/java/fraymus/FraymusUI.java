@@ -71,8 +71,8 @@ public class FraymusUI {
     private static void renderArenaView() {
         if (arenaTextureId < 0) return;
 
-        ImGui.setNextWindowPos(700, 10, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(570, 340, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(0, 0, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(940, 740, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Arena", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
             ImVec2 avail = ImGui.getContentRegionAvail();
@@ -90,8 +90,8 @@ public class FraymusUI {
     }
 
     private static void renderWorldStatus(PhiWorld world) {
-        ImGui.setNextWindowPos(10, 10, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(280, 200, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(940, 0, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 160, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("World Status")) {
             ImGui.text("Population: " + world.getPopulation());
@@ -126,8 +126,8 @@ public class FraymusUI {
     }
 
     private static void renderEntityInspector(PhiWorld world) {
-        ImGui.setNextWindowPos(10, 220, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(320, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(940, 160, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 250, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Entity Inspector")) {
             List<PhiNode> nodes = world.getNodes();
@@ -176,8 +176,8 @@ public class FraymusUI {
     }
 
     private static void renderBrainInspector(PhiWorld world) {
-        ImGui.setNextWindowPos(340, 10, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(350, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(940, 410, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 200, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Brain Inspector")) {
             List<PhiNode> nodes = world.getNodes();
@@ -227,8 +227,8 @@ public class FraymusUI {
     }
 
     private static void renderAdaptiveLogicPanel(PhiWorld world) {
-        ImGui.setNextWindowPos(340, 320, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(350, 220, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(300, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 200, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Adaptive Logic")) {
             List<PhiNode> nodes = world.getNodes();
@@ -293,8 +293,8 @@ public class FraymusUI {
     }
 
     private static void renderConsciousnessMonitor(PhiWorld world) {
-        ImGui.setNextWindowPos(10, 530, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(320, 190, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(300, 510, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 170, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Consciousness")) {
             List<PhiNode> nodes = world.getNodes();
@@ -335,8 +335,8 @@ public class FraymusUI {
     }
 
     private static void renderQuantumClockPanel(PhiWorld world) {
-        ImGui.setNextWindowPos(340, 550, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(350, 170, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(610, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(300, 170, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Quantum Clock")) {
             List<PhiNode> nodes = world.getNodes();
@@ -373,8 +373,8 @@ public class FraymusUI {
     }
 
     private static void renderGenesisMemory(PhiWorld world) {
-        ImGui.setNextWindowPos(700, 360, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(570, 180, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(470, 740, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Genesis Memory")) {
             GenesisMemory memory = world.getMemory();
@@ -409,8 +409,8 @@ public class FraymusUI {
     }
 
     private static void renderSystemVerification(PhiWorld world) {
-        ImGui.setNextWindowPos(700, 550, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(570, 170, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(0, 870, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("System Verification")) {
             ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "FRAYMUS ENGINE V2 - PROOF OF SYSTEM");
@@ -462,8 +462,8 @@ public class FraymusUI {
     }
 
     private static void renderColonyOverview(PhiWorld world) {
-        ImGui.setNextWindowPos(10, 730, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(340, 260, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(940, 610, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(340, 200, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Colony Overview")) {
             ColonyCoach coach = world.getCoach();
@@ -519,8 +519,8 @@ public class FraymusUI {
     }
 
     private static void renderConceptArenaPanel(PhiWorld world) {
-        ImGui.setNextWindowPos(360, 730, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(340, 260, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(0, 740, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(470, 260, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Concept Arena")) {
             ConceptArena arena = world.getArena();
@@ -569,8 +569,8 @@ public class FraymusUI {
     }
 
     private static void renderLiveLog() {
-        ImGui.setNextWindowPos(710, 730, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(560, 130, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(470, 870, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(470, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Live Log")) {
             if (ImGui.button("Clear")) {
