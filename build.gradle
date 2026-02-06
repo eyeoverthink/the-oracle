@@ -31,6 +31,8 @@ dependencies {
     runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
 
     implementation "org.joml:joml:$jomlVersion"
+
+    implementation "org.apache.pdfbox:pdfbox:2.0.31"
 }
 
 application {
