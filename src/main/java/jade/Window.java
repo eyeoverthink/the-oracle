@@ -1,6 +1,8 @@
 package jade;
 
 import fraymus.*;
+import imgui.ImGui;
+import imgui.ImGuiIO;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -89,8 +91,29 @@ public class Window {
 
         glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
         glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
-        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallback);
-        glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
+        glfwSetScrollCallback(glfwWindow, (w, xOffset, yOffset) -> {
+            MouseListener.mouseScrollCallback(w, xOffset, yOffset);
+            ImGui.getIO().setMouseWheelH((float) xOffset);
+            ImGui.getIO().setMouseWheel((float) yOffset);
+        });
+        glfwSetKeyCallback(glfwWindow, (w, key, scancode, action, mods) -> {
+            KeyListener.keyCallback(w, key, scancode, action, mods);
+            ImGuiIO io = ImGui.getIO();
+            if (key >= 0 && key < 512) {
+                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                    io.setKeysDown(key, true);
+                } else if (action == GLFW_RELEASE) {
+                    io.setKeysDown(key, false);
+                }
+            }
+            io.setKeyCtrl((mods & GLFW_MOD_CONTROL) != 0);
+            io.setKeyShift((mods & GLFW_MOD_SHIFT) != 0);
+            io.setKeyAlt((mods & GLFW_MOD_ALT) != 0);
+            io.setKeySuper((mods & GLFW_MOD_SUPER) != 0);
+        });
+        glfwSetCharCallback(glfwWindow, (w, codepoint) -> {
+            ImGui.getIO().addInputCharacter(codepoint);
+        });
 
         glfwSetWindowSizeCallback(glfwWindow, (w, newWidth, newHeight) -> {
             Window.get().setWidth(newWidth);
