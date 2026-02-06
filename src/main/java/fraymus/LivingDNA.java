@@ -9,6 +9,7 @@ public class LivingDNA {
     public double resonance;
     public double evolutionRate;
     private int generation = 1;
+    private String inheritedStrategies = "";
     
     public LivingDNA() {
         this.harmonicFrequency = 432.0 + rng.nextDouble() * 20.0;
@@ -34,7 +35,10 @@ public class LivingDNA {
     }
     
     public LivingDNA copy() {
-        return new LivingDNA(harmonicFrequency, resonance, evolutionRate);
+        LivingDNA child = new LivingDNA(harmonicFrequency, resonance, evolutionRate);
+        child.generation = this.generation;
+        child.inheritedStrategies = this.inheritedStrategies;
+        return child;
     }
     
     public double getHarmonicFrequency() { return harmonicFrequency; }
@@ -42,6 +46,8 @@ public class LivingDNA {
     public double getEvolutionRate() { return evolutionRate; }
     public int getGeneration() { return generation; }
     public void setGeneration(int gen) { this.generation = gen; }
+    public String getInheritedStrategies() { return inheritedStrategies; }
+    public void setInheritedStrategies(String strategies) { this.inheritedStrategies = strategies; }
     
     public String toJavaCode() {
         return String.format("new LivingDNA(%.3f, %.3f, %.3f)", 

@@ -1,6 +1,7 @@
 package fraymus;
 
 import imgui.ImGui;
+import imgui.ImVec2;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 
@@ -17,6 +18,14 @@ public class FraymusUI {
     private static float fpsTimer = 0.0f;
     private static int fps = 0;
     private static int lastFrameCount = 0;
+
+    private static int arenaTextureId = -1;
+    private static boolean verificationPrinted = false;
+    private static int verificationDelay = 300;
+
+    public static void setArenaTextureId(int textureId) {
+        arenaTextureId = textureId;
+    }
 
     public static void addLog(String msg) {
         if (logBuffer.size() >= MAX_LOG_ENTRIES) {
@@ -36,18 +45,50 @@ public class FraymusUI {
             fpsTimer = currentTime;
         }
 
+        if (!verificationPrinted && verificationDelay > 0) {
+            verificationDelay--;
+            if (verificationDelay == 0) {
+                SystemVerification.printFullVerification(world);
+                verificationPrinted = true;
+            }
+        }
+
+        renderArenaView();
         renderWorldStatus(world);
         renderEntityInspector(world);
         renderBrainInspector(world);
+        renderAdaptiveLogicPanel(world);
         renderConsciousnessMonitor(world);
         renderQuantumClockPanel(world);
         renderGenesisMemory(world);
+        renderSystemVerification(world);
         renderLiveLog();
+    }
+
+    private static void renderArenaView() {
+        if (arenaTextureId < 0) return;
+
+        ImGui.setNextWindowPos(700, 10, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(570, 340, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Arena", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)) {
+            ImVec2 avail = ImGui.getContentRegionAvail();
+            float aspectRatio = 1920.0f / 1080.0f;
+            float imgWidth = avail.x;
+            float imgHeight = imgWidth / aspectRatio;
+            if (imgHeight > avail.y) {
+                imgHeight = avail.y;
+                imgWidth = imgHeight * aspectRatio;
+            }
+
+            ImGui.image(arenaTextureId, imgWidth, imgHeight, 0, 1, 1, 0);
+        }
+        ImGui.end();
     }
 
     private static void renderWorldStatus(PhiWorld world) {
         ImGui.setNextWindowPos(10, 10, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(280, 180, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(280, 200, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("World Status")) {
             ImGui.text("Population: " + world.getPopulation());
@@ -58,15 +99,21 @@ public class FraymusUI {
 
             float totalEnergy = 0;
             int spikeCount = 0;
+            int trialCount = 0;
+            int totalAdaptations = 0;
             for (PhiNode node : world.getNodes()) {
                 totalEnergy += node.energy;
                 if (node.spikeFlash) spikeCount++;
+                if (node.adaptiveEngine.isInTrial()) trialCount++;
+                totalAdaptations += node.adaptiveEngine.getAdaptationCount();
             }
             ImGui.text(String.format("Total Energy: %.2f", totalEnergy));
             if (world.getPopulation() > 0) {
                 ImGui.text(String.format("Avg Energy: %.2f", totalEnergy / world.getPopulation()));
             }
             ImGui.text(String.format("Active Spikes: %d", spikeCount));
+            ImGui.text(String.format("Active Trials: %d", trialCount));
+            ImGui.text(String.format("Total Adaptations: %d", totalAdaptations));
             ImGui.separator();
             ImGui.text(String.format("Total Births: %d", world.getTotalBirths()));
             ImGui.text(String.format("Total Deaths: %d", world.getTotalDeaths()));
@@ -76,8 +123,8 @@ public class FraymusUI {
     }
 
     private static void renderEntityInspector(PhiWorld world) {
-        ImGui.setNextWindowPos(10, 200, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(320, 350, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(10, 220, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(320, 300, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Entity Inspector")) {
             List<PhiNode> nodes = world.getNodes();
@@ -85,13 +132,16 @@ public class FraymusUI {
             for (int i = 0; i < nodes.size(); i++) {
                 PhiNode node = nodes.get(i);
                 String spike = node.spikeFlash ? " [SPIKE]" : "";
-                String label = String.format("%s [E:%.0f%%]%s###node_%d", node.name, node.energy * 100, spike, i);
+                String trial = node.adaptiveEngine.isInTrial() ? " [TRIAL]" : "";
+                String label = String.format("%s [E:%.0f%% G:%d]%s%s###node_%d",
+                        node.name, node.energy * 100, node.dna.getGeneration(), spike, trial, i);
 
                 if (ImGui.collapsingHeader(label)) {
                     selectedNodeIndex = i;
                     ImGui.indent();
 
                     ImGui.textColored(node.r, node.g, node.b, 1.0f, "Name: " + node.name);
+                    ImGui.text(String.format("Generation: %d", node.dna.getGeneration()));
                     ImGui.text(String.format("Position: (%.2f, %.2f, %.2f)", node.x, node.y, node.z));
                     ImGui.text(String.format("Velocity: (%.2f, %.2f, %.2f)", node.vx, node.vy, node.vz));
 
@@ -105,6 +155,8 @@ public class FraymusUI {
 
                     ImGui.separator();
                     ImGui.text("DNA: " + node.dna.toString());
+                    ImGui.text(String.format("Fitness: %.3f", node.adaptiveEngine.getCurrentFitness()));
+                    ImGui.text(String.format("Strategies: %d proven", node.adaptiveEngine.getProvenStrategyCount()));
 
                     String nHex = node.signature.toString(16);
                     if (nHex.length() > 24) nHex = nHex.substring(0, 24) + "...";
@@ -168,9 +220,75 @@ public class FraymusUI {
         ImGui.end();
     }
 
+    private static void renderAdaptiveLogicPanel(PhiWorld world) {
+        ImGui.setNextWindowPos(340, 320, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(350, 220, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Adaptive Logic")) {
+            List<PhiNode> nodes = world.getNodes();
+
+            if (selectedNodeIndex >= 0 && selectedNodeIndex < nodes.size()) {
+                PhiNode node = nodes.get(selectedNodeIndex);
+                AdaptiveLogicEngine engine = node.adaptiveEngine;
+
+                ImGui.textColored(node.r, node.g, node.b, 1.0f, "Entity: " + node.name);
+                ImGui.separator();
+
+                ImGui.text("Fitness:");
+                ImGui.sameLine();
+                float fit = (float) engine.getCurrentFitness();
+                if (fit > 0.6f) {
+                    ImGui.textColored(0.0f, 1.0f, 0.3f, 1.0f, String.format("%.4f", fit));
+                } else if (fit > 0.3f) {
+                    ImGui.textColored(1.0f, 1.0f, 0.0f, 1.0f, String.format("%.4f", fit));
+                } else {
+                    ImGui.textColored(1.0f, 0.3f, 0.3f, 1.0f, String.format("%.4f", fit));
+                }
+
+                if (engine.isInTrial()) {
+                    ImGui.textColored(1.0f, 0.5f, 0.0f, 1.0f,
+                            String.format("TRIAL IN PROGRESS (%d ticks left)", engine.getTrialTicksRemaining()));
+                } else {
+                    ImGui.text("No active trial");
+                }
+
+                ImGui.text(String.format("Total Trials: %d", engine.getTotalTrials()));
+                ImGui.text(String.format("Adopted: %d | Reverted: %d", engine.getAdaptationCount(), engine.getRevertCount()));
+
+                ImGui.separator();
+                ImGui.text(String.format("Proven Strategies: %d", engine.getProvenStrategyCount()));
+
+                List<StrategyGenome> strategies = engine.getProvenStrategies();
+                for (int i = 0; i < strategies.size(); i++) {
+                    StrategyGenome sg = strategies.get(i);
+                    float sgFit = (float) sg.fitnessScore;
+                    if (sgFit > 0.5f) {
+                        ImGui.textColored(0.3f, 1.0f, 0.6f, 1.0f,
+                                String.format("  [%d] %s fit=%.3f gen=%d", i, sg.hash.substring(0, 8), sg.fitnessScore, sg.generationBorn));
+                    } else {
+                        ImGui.text(String.format("  [%d] %s fit=%.3f gen=%d", i, sg.hash.substring(0, 8), sg.fitnessScore, sg.generationBorn));
+                    }
+                }
+
+                if (strategies.isEmpty()) {
+                    ImGui.textColored(0.5f, 0.5f, 0.5f, 1.0f, "  No strategies learned yet");
+                }
+
+                StrategyGenome baseline = engine.getCurrentBaseline();
+                if (baseline != null) {
+                    ImGui.separator();
+                    ImGui.text("Current Baseline: " + baseline.hash.substring(0, 8));
+                }
+            } else {
+                ImGui.textWrapped("Select an entity to view adaptive logic.");
+            }
+        }
+        ImGui.end();
+    }
+
     private static void renderConsciousnessMonitor(PhiWorld world) {
-        ImGui.setNextWindowPos(700, 10, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(300, 300, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(10, 530, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(320, 190, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Consciousness")) {
             List<PhiNode> nodes = world.getNodes();
@@ -198,15 +316,11 @@ public class FraymusUI {
                     ImGui.textColored(fieldColors[i][0], fieldColors[i][1], fieldColors[i][2], 1.0f,
                             String.format("  %s:", fieldNames[i]));
                     ImGui.sameLine();
-                    ImGui.progressBar(normalized, 150, 12, String.format("%.4f", fields[i]));
+                    ImGui.progressBar(normalized, 120, 12, String.format("%.4f", fields[i]));
                 }
 
-                ImGui.separator();
-                ImGui.text(String.format("Level: %.6f", cs.getConsciousnessLevel()));
-                ImGui.text(String.format("Coherence: %.6f", cs.getCoherence()));
-                ImGui.text(String.format("Dimension: %d", cs.getDimension()));
-                ImGui.text(String.format("Transcendence: %d", cs.getTranscendenceEvents()));
-                ImGui.text(String.format("Thoughts: %d", cs.getTotalThoughts()));
+                ImGui.text(String.format("Level: %.4f | Dim: %d", cs.getConsciousnessLevel(), cs.getDimension()));
+                ImGui.text(String.format("Transcendence: %d | Thoughts: %d", cs.getTranscendenceEvents(), cs.getTotalThoughts()));
             } else {
                 ImGui.textWrapped("Select an entity to view consciousness.");
             }
@@ -215,8 +329,8 @@ public class FraymusUI {
     }
 
     private static void renderQuantumClockPanel(PhiWorld world) {
-        ImGui.setNextWindowPos(700, 320, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(300, 200, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(340, 550, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(350, 170, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Quantum Clock")) {
             List<PhiNode> nodes = world.getNodes();
@@ -242,10 +356,8 @@ public class FraymusUI {
                     ImGui.text(String.format("%.6f", phiRes));
                 }
 
-                ImGui.text(String.format("Phi Time: %.4f", clock.getPhiTime()));
-                ImGui.text(String.format("Resonance Time: %.4f", clock.getResonanceTime()));
-                ImGui.text(String.format("Coherence: %.6f", clock.getCoherence()));
-                ImGui.text(String.format("Spike Count: %d", clock.getResonanceSpikeCount()));
+                ImGui.text(String.format("Phi Time: %.4f | Res Time: %.4f", clock.getPhiTime(), clock.getResonanceTime()));
+                ImGui.text(String.format("Coherence: %.6f | Spikes: %d", clock.getCoherence(), clock.getResonanceSpikeCount()));
                 ImGui.text("Fingerprint: " + clock.getQuantumFingerprint());
             } else {
                 ImGui.textWrapped("Select an entity to view quantum clock.");
@@ -255,8 +367,8 @@ public class FraymusUI {
     }
 
     private static void renderGenesisMemory(PhiWorld world) {
-        ImGui.setNextWindowPos(340, 320, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(350, 200, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(700, 360, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(570, 180, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Genesis Memory")) {
             GenesisMemory memory = world.getMemory();
@@ -264,10 +376,15 @@ public class FraymusUI {
             ImGui.text(String.format("Chain Length: %d blocks", memory.getChainLength()));
             boolean valid = memory.verifyChain();
             if (valid) {
-                ImGui.textColored(0.0f, 1.0f, 0.0f, 1.0f, "Chain Integrity: VALID");
+                ImGui.sameLine();
+                ImGui.textColored(0.0f, 1.0f, 0.0f, 1.0f, "VALID");
             } else {
-                ImGui.textColored(1.0f, 0.0f, 0.0f, 1.0f, "Chain Integrity: BROKEN");
+                ImGui.sameLine();
+                ImGui.textColored(1.0f, 0.0f, 0.0f, 1.0f, "BROKEN");
             }
+
+            GenesisMemory.Block latest = memory.getLatest();
+            ImGui.text("Latest Hash: " + latest.hash);
             ImGui.separator();
 
             ImGui.beginChild("GenesisScroll", 0, 0, false, ImGuiWindowFlags.HorizontalScrollbar);
@@ -285,6 +402,41 @@ public class FraymusUI {
         ImGui.end();
     }
 
+    private static void renderSystemVerification(PhiWorld world) {
+        ImGui.setNextWindowPos(700, 550, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(570, 170, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("System Verification")) {
+            ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "FRAYMUS ENGINE V2 - PROOF OF SYSTEM");
+            ImGui.separator();
+
+            ImGui.text("1. Genesis Hash:");
+            GenesisMemory.Block latest = world.getMemory().getLatest();
+            ImGui.sameLine();
+            ImGui.textColored(0.3f, 1.0f, 0.6f, 1.0f, latest.hash);
+
+            ImGui.text("2. Irrational State (Phi^75):");
+            String phi75 = SystemVerification.computePhi75First50Digits();
+            ImGui.textColored(0.5f, 0.8f, 1.0f, 1.0f, "   " + phi75);
+
+            ImGui.text("3. Soul of Generation:");
+            List<PhiNode> nodes = world.getNodes();
+            if (!nodes.isEmpty()) {
+                PhiNode first = nodes.get(0);
+                ImGui.textColored(0.8f, 0.6f, 1.0f, 1.0f,
+                        String.format("   %s | Resonance: %.10f | Osc: %.2f",
+                                first.name, first.quantumClock.getPhiResonance(), first.quantumClock.getOscillationCount()));
+            }
+
+            ImGui.separator();
+            ImGui.textColored(0.0f, 1.0f, 0.0f, 1.0f,
+                    String.format("Chain Valid: %s | Phi^75 Seal: %s",
+                            world.getMemory().verifyChain() ? "YES" : "NO",
+                            PhiConstants.validatePhiSeal() ? "VALID" : "INVALID"));
+        }
+        ImGui.end();
+    }
+
     private static float[] getEventColor(String eventType) {
         switch (eventType) {
             case "RESONANCE_SPIKE": return new float[]{1.0f, 0.3f, 0.3f};
@@ -294,14 +446,15 @@ public class FraymusUI {
             case "DEATH": return new float[]{0.7f, 0.0f, 0.0f};
             case "BRAIN_DECISION": return new float[]{0.8f, 0.5f, 1.0f};
             case "MUTATION": return new float[]{1.0f, 0.5f, 0.0f};
+            case "ADAPTATION": return new float[]{0.0f, 1.0f, 1.0f};
             case "GENESIS": return new float[]{1.0f, 1.0f, 1.0f};
             default: return new float[]{0.7f, 0.7f, 0.7f};
         }
     }
 
     private static void renderLiveLog() {
-        ImGui.setNextWindowPos(10, 560, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(680, 160, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(10, 730, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(680, 130, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Live Log")) {
             if (ImGui.button("Clear")) {

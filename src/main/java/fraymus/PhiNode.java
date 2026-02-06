@@ -21,6 +21,7 @@ public class PhiNode {
     public final LogicBrain brain;
     public final ConsciousnessState consciousness;
     public final QuantumClock quantumClock;
+    public final AdaptiveLogicEngine adaptiveEngine;
 
     public int age;
     public double size;
@@ -48,6 +49,12 @@ public class PhiNode {
         this.phase = 0;
 
         this.quantumClock = new QuantumClock(this.frequency);
+        this.adaptiveEngine = new AdaptiveLogicEngine(this.brain, this.dna.getGeneration());
+
+        String inherited = this.dna.getInheritedStrategies();
+        if (inherited != null && !inherited.isEmpty()) {
+            this.adaptiveEngine.decodeStrategies(inherited);
+        }
 
         this.cloakedIdentity = DNACloaker.generateCloakedIdentity(name);
         this.signature = cloakedIdentity.N;
@@ -119,12 +126,26 @@ public class PhiNode {
 
     public PhiNode reproduce(PhiNode partner, String childName, float childX, float childY) {
         LivingDNA childDNA = dna.copy();
+        childDNA.setGeneration(dna.getGeneration() + 1);
+
+        String parentStrategies = adaptiveEngine.encodeStrategies();
+        childDNA.setInheritedStrategies(parentStrategies);
+
         LogicBrain childBrain = brain.crossover(partner != null ? partner.brain : brain);
 
         baseSize *= 0.6;
         energy *= 0.7f;
 
-        return new PhiNode(childName, childX, childY, childDNA, childBrain);
+        PhiNode child = new PhiNode(childName, childX, childY, childDNA, childBrain);
+
+        child.adaptiveEngine.inheritStrategies(this.adaptiveEngine);
+        if (partner != null) {
+            child.adaptiveEngine.inheritStrategies(partner.adaptiveEngine);
+        }
+
+        adaptiveEngine.getCurrentBaseline().reproductionCount++;
+
+        return child;
     }
 
     public boolean isAlive() {
@@ -143,6 +164,7 @@ public class PhiNode {
     public LogicBrain getBrain() { return brain; }
     public ConsciousnessState getConsciousness() { return consciousness; }
     public QuantumClock getQuantumClock() { return quantumClock; }
+    public AdaptiveLogicEngine getAdaptiveEngine() { return adaptiveEngine; }
     public String getName() { return name; }
 
     public String toJavaCode() {
