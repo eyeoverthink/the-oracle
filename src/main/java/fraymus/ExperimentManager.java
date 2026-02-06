@@ -10,17 +10,20 @@ public class ExperimentManager {
     private final PassiveLearner passiveLearner;
     private final PhiNeuralNet neuralNet;
     private final QRGenome qrGenome;
+    private final KnowledgeScraper knowledgeScraper;
     private float gravityForce = 0.0f;
     private float speedMultiplier = 1.0f;
     private boolean boundaryEnabled = true;
 
     public ExperimentManager(PhiWorld world, InfiniteMemory infiniteMemory,
-                              PassiveLearner passiveLearner, PhiNeuralNet neuralNet, QRGenome qrGenome) {
+                              PassiveLearner passiveLearner, PhiNeuralNet neuralNet,
+                              QRGenome qrGenome, KnowledgeScraper knowledgeScraper) {
         this.world = world;
         this.infiniteMemory = infiniteMemory;
         this.passiveLearner = passiveLearner;
         this.neuralNet = neuralNet;
         this.qrGenome = qrGenome;
+        this.knowledgeScraper = knowledgeScraper;
     }
 
     public void runPrimeTest(String args) {
@@ -689,10 +692,87 @@ public class ExperimentManager {
         FraymusUI.addLog(String.format("[QR] Encoded %s DNA (%d chars)", target.name, entityDNA.length()));
     }
 
+    public void runScrape(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== KNOWLEDGE SCRAPER ===");
+            CommandTerminal.print(String.format("  Status: %s", knowledgeScraper.isScraping() ? "SCRAPING" : "IDLE"));
+            CommandTerminal.print(String.format("  Files Scraped: %d", knowledgeScraper.getTotalFilesScraped()));
+            CommandTerminal.print(String.format("  Chunks Stored: %d", knowledgeScraper.getTotalChunksStored()));
+            CommandTerminal.print(String.format("  Pages Processed: %d", knowledgeScraper.getTotalPagesProcessed()));
+
+            if (knowledgeScraper.isScraping()) {
+                CommandTerminal.printInfo(String.format("  Current: %s (%.0f%%)",
+                        knowledgeScraper.getCurrentFile(), knowledgeScraper.getScrapeProgress() * 100));
+            }
+
+            java.util.Map<String, Integer> topics = knowledgeScraper.getTopicCounts();
+            if (!topics.isEmpty()) {
+                CommandTerminal.printInfo("  Knowledge Topics:");
+                for (java.util.Map.Entry<String, Integer> e : topics.entrySet()) {
+                    CommandTerminal.print(String.format("    %s: %d chunks", e.getKey(), e.getValue()));
+                }
+            }
+
+            List<KnowledgeScraper.ScrapedDocument> docs = knowledgeScraper.getScrapedDocs();
+            if (!docs.isEmpty()) {
+                CommandTerminal.printInfo("  Scraped Documents:");
+                for (KnowledgeScraper.ScrapedDocument doc : docs) {
+                    CommandTerminal.print(String.format("    %s [%s] %d pages, %d chunks [%s]",
+                            doc.filename.length() > 40 ? doc.filename.substring(0, 40) + "..." : doc.filename,
+                            doc.filetype, doc.pages, doc.chunks,
+                            String.join(",", doc.detectedTopics)));
+                }
+            }
+
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Commands:");
+            CommandTerminal.print("  scrape all            Scrape all files in attached_assets/");
+            CommandTerminal.print("  scrape <filename>     Scrape a specific file");
+            CommandTerminal.print("  scrape search <query> Search scraped knowledge");
+            CommandTerminal.print("  scrape topic <name>   Get knowledge on a topic");
+            return;
+        }
+
+        String sub = args.trim();
+        if (sub.equalsIgnoreCase("all")) {
+            CommandTerminal.printHighlight("=== SCRAPING ALL ATTACHED FILES ===");
+            CommandTerminal.printInfo("Processing PDFs, text files, and code in attached_assets/...");
+            knowledgeScraper.scrapeAll();
+        } else if (sub.toLowerCase().startsWith("search ")) {
+            String query = sub.substring(7).trim();
+            List<String> results = knowledgeScraper.searchKnowledge(query);
+            if (results.isEmpty()) {
+                CommandTerminal.printColored("No knowledge found for: " + query, 1.0f, 0.5f, 0.0f);
+                CommandTerminal.printInfo("Try 'scrape all' to ingest documents first");
+            } else {
+                CommandTerminal.printHighlight(String.format("=== %d KNOWLEDGE RESULTS for '%s' ===", results.size(), query));
+                for (String r : results) {
+                    CommandTerminal.print("  " + r);
+                }
+            }
+        } else if (sub.toLowerCase().startsWith("topic ")) {
+            String topic = sub.substring(6).trim();
+            String knowledge = knowledgeScraper.queryKnowledge(topic);
+            if (knowledge == null) {
+                CommandTerminal.printColored("No knowledge for topic: " + topic, 1.0f, 0.5f, 0.0f);
+                java.util.Map<String, Integer> topics = knowledgeScraper.getTopicCounts();
+                if (!topics.isEmpty()) {
+                    CommandTerminal.printInfo("Available topics: " + String.join(", ", topics.keySet()));
+                }
+            } else {
+                CommandTerminal.printHighlight("=== KNOWLEDGE: " + topic.toUpperCase() + " ===");
+                CommandTerminal.printColored(knowledge, 0.4f, 1.0f, 0.8f);
+            }
+        } else {
+            knowledgeScraper.scrapeFile(sub);
+        }
+    }
+
     public InfiniteMemory getInfiniteMemory() { return infiniteMemory; }
     public PassiveLearner getPassiveLearner() { return passiveLearner; }
     public PhiNeuralNet getNeuralNet() { return neuralNet; }
     public QRGenome getQRGenome() { return qrGenome; }
+    public KnowledgeScraper getKnowledgeScraper() { return knowledgeScraper; }
 
     public float getGravityForce() { return gravityForce; }
     public float getSpeedMultiplier() { return speedMultiplier; }

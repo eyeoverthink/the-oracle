@@ -10,6 +10,7 @@ public class PhiNeuralNet {
 
     private final PassiveLearner learner;
     private final InfiniteMemory memory;
+    private KnowledgeScraper scraper;
     private final Random rng = new Random();
     private int queriesProcessed = 0;
     private int patternsMatched = 0;
@@ -115,6 +116,10 @@ public class PhiNeuralNet {
         this.memory = memory;
     }
 
+    public void setScraper(KnowledgeScraper scraper) {
+        this.scraper = scraper;
+    }
+
     public NeuralResponse process(String question, List<PhiNode> nodes) {
         queriesProcessed++;
         String lower = question.toLowerCase().trim();
@@ -185,6 +190,11 @@ public class PhiNeuralNet {
             }
         }
 
+        String scrapedKnowledge = queryScrapedKnowledge(lower, detectedTopics);
+        if (scrapedKnowledge != null) {
+            response.append("\n[Scraped Knowledge] ").append(scrapedKnowledge);
+        }
+
         if (!circuitContribution.isEmpty()) {
             response.append(String.format(" [Circuit %s contributed %.4f resonance]",
                     circuitContribution, circuitResonance));
@@ -250,6 +260,32 @@ public class PhiNeuralNet {
         for (char c : input.toCharArray()) hash = hash * 31 + c;
         int idx = Math.abs(hash) % PHI_WISDOM.length;
         return PHI_WISDOM[idx];
+    }
+
+    private String queryScrapedKnowledge(String lower, List<String> detectedTopics) {
+        if (scraper == null || scraper.getTotalChunksStored() == 0) return null;
+
+        for (String topic : detectedTopics) {
+            String knowledge = scraper.queryKnowledge(topic);
+            if (knowledge != null) return knowledge;
+        }
+
+        String[] queryWords = lower.split("\\s+");
+        for (String word : queryWords) {
+            if (word.length() >= 4) {
+                String knowledge = scraper.queryKnowledge(word);
+                if (knowledge != null) return knowledge;
+            }
+        }
+
+        List<String> results = scraper.searchKnowledge(lower);
+        if (!results.isEmpty()) {
+            String result = results.get(0);
+            if (result.length() > 300) result = result.substring(0, 300) + "...";
+            return result;
+        }
+
+        return null;
     }
 
     public int getQueriesProcessed() { return queriesProcessed; }

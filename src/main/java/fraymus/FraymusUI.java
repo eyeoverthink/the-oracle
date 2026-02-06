@@ -69,6 +69,7 @@ public class FraymusUI {
         renderInfiniteMemoryPanel();
         renderPassiveLearnerPanel();
         renderQRGenomePanel();
+        renderKnowledgeScraperPanel();
         renderLiveLog();
         CommandTerminal.render();
     }
@@ -578,7 +579,7 @@ public class FraymusUI {
         if (net == null) return;
 
         ImGui.setNextWindowPos(0, 440, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(235, 140, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(188, 140, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Phi Neural Net")) {
             ImGui.textColored(0.4f, 1.0f, 0.8f, 1.0f, "OFFLINE LLM - PHI HARMONIC");
@@ -595,8 +596,8 @@ public class FraymusUI {
         InfiniteMemory mem = jade.Window.getInfiniteMemory();
         if (mem == null) return;
 
-        ImGui.setNextWindowPos(235, 440, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(235, 140, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(188, 440, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(188, 140, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Infinite Memory")) {
             ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "PERSISTENT FILE-BACKED MEMORY");
@@ -622,8 +623,8 @@ public class FraymusUI {
         PassiveLearner pl = jade.Window.getPassiveLearner();
         if (pl == null) return;
 
-        ImGui.setNextWindowPos(470, 440, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(235, 140, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(376, 440, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(188, 140, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("Passive Learner")) {
             ImGui.textColored(0.5f, 0.8f, 1.0f, 1.0f, "5x8x13 NEURAL TENSOR");
@@ -648,8 +649,8 @@ public class FraymusUI {
         QRGenome genome = jade.Window.getQRGenome();
         if (genome == null) return;
 
-        ImGui.setNextWindowPos(705, 440, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(235, 140, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(564, 440, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(188, 140, ImGuiCond.FirstUseEver);
 
         if (ImGui.begin("QR Genome")) {
             ImGui.textColored(1.0f, 0.5f, 0.0f, 1.0f, "QR DNA CODON SYSTEM");
@@ -660,6 +661,45 @@ public class FraymusUI {
                     genome.getTotalMutations(), genome.getTotalCrossovers()));
             ImGui.text(String.format("Fitness: %.4f | Resonance: %.4f",
                     genome.getAverageFitness(), genome.getTotalResonance()));
+        }
+        ImGui.end();
+    }
+
+    private static void renderKnowledgeScraperPanel() {
+        KnowledgeScraper scraper = jade.Window.getKnowledgeScraper();
+        if (scraper == null) return;
+
+        ImGui.setNextWindowPos(752, 440, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(188, 140, ImGuiCond.FirstUseEver);
+
+        if (ImGui.begin("Knowledge Scraper")) {
+            ImGui.textColored(0.3f, 1.0f, 0.6f, 1.0f, "DOCUMENT INTELLIGENCE");
+            ImGui.separator();
+
+            if (scraper.isScraping()) {
+                ImGui.textColored(1.0f, 0.84f, 0.0f, 1.0f, "SCRAPING...");
+                String cur = scraper.getCurrentFile();
+                if (cur.length() > 20) cur = cur.substring(0, 20) + "...";
+                ImGui.text(cur);
+                ImGui.progressBar((float) scraper.getScrapeProgress(), 170, 12);
+            } else {
+                ImGui.textColored(0.5f, 0.8f, 1.0f, 1.0f, "IDLE");
+            }
+
+            ImGui.text(String.format("Files: %d", scraper.getTotalFilesScraped()));
+            ImGui.text(String.format("Chunks: %d", scraper.getTotalChunksStored()));
+            ImGui.text(String.format("Pages: %d", scraper.getTotalPagesProcessed()));
+
+            java.util.Map<String, Integer> topics = scraper.getTopicCounts();
+            if (!topics.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                for (java.util.Map.Entry<String, Integer> e : topics.entrySet()) {
+                    if (sb.length() > 0) sb.append(" ");
+                    sb.append(e.getKey().substring(0, Math.min(3, e.getKey().length())).toUpperCase())
+                      .append(":").append(e.getValue());
+                }
+                ImGui.textColored(0.6f, 0.6f, 0.6f, 1.0f, sb.toString());
+            }
         }
         ImGui.end();
     }

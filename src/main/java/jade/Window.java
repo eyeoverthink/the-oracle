@@ -28,6 +28,7 @@ public class Window {
     private PassiveLearner passiveLearner;
     private PhiNeuralNet neuralNet;
     private QRGenome qrGenome;
+    private KnowledgeScraper knowledgeScraper;
 
     private static Window window = null;
 
@@ -192,7 +193,10 @@ public class Window {
         neuralNet = new PhiNeuralNet(passiveLearner, infiniteMemory);
         qrGenome = new QRGenome(infiniteMemory);
 
-        experimentManager = new ExperimentManager(phiWorld, infiniteMemory, passiveLearner, neuralNet, qrGenome);
+        knowledgeScraper = new KnowledgeScraper(infiniteMemory, passiveLearner, neuralNet);
+        neuralNet.setScraper(knowledgeScraper);
+
+        experimentManager = new ExperimentManager(phiWorld, infiniteMemory, passiveLearner, neuralNet, qrGenome, knowledgeScraper);
         CommandTerminal.init(experimentManager);
 
         passiveLearner.start();
@@ -203,6 +207,7 @@ public class Window {
         FraymusUI.addLog("Infinite Memory loaded: " + infiniteMemory.getRecordCount() + " records");
         FraymusUI.addLog("Passive Learner started: " + passiveLearner.getPassiveCycles() + " prior cycles");
         FraymusUI.addLog("QR Genome initialized: " + qrGenome.getGenomeSize() + " codons");
+        FraymusUI.addLog("Knowledge Scraper ready - type 'scrape' for document ingestion");
         FraymusUI.addLog("Phi Neural Net online - type 'ask' for queries");
         FraymusUI.addLog("Terminal ready - type 'help' for commands");
 
@@ -307,6 +312,10 @@ public class Window {
 
     public static QRGenome getQRGenome() {
         return get().qrGenome;
+    }
+
+    public static KnowledgeScraper getKnowledgeScraper() {
+        return get().knowledgeScraper;
     }
 
     public void setWidth(int width) {
