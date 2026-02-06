@@ -768,6 +768,270 @@ public class ExperimentManager {
         }
     }
 
+    public void runEthics(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== ETHICAL ENGINE ===");
+            CommandTerminal.print(String.format("  Evaluations: %d | Approved: %d | Blocked: %d",
+                    EthicalEngine.getTotalEvaluations(), EthicalEngine.getTotalApproved(), EthicalEngine.getTotalBlocked()));
+            CommandTerminal.print(String.format("  Threshold: %.4f (PHI_INVERSE)", PhiConstants.PHI_INVERSE));
+            CommandTerminal.printInfo("  Forbidden categories:");
+            for (String cat : EthicalEngine.FORBIDDEN_CATEGORIES) {
+                CommandTerminal.print("    - " + cat);
+            }
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Usage: ethics <action_description>");
+            return;
+        }
+
+        EthicalEngine.EthicalResult result = EthicalEngine.evaluate(args);
+        CommandTerminal.printHighlight("=== ETHICAL EVALUATION ===");
+        CommandTerminal.print("  Action: " + result.action);
+
+        if (result.approved) {
+            CommandTerminal.printSuccess("  APPROVED");
+        } else {
+            CommandTerminal.printError("  BLOCKED");
+        }
+
+        CommandTerminal.print(String.format("  Resonance Score: %.4f", result.resonanceScore));
+        if (result.violatedCategory != null) {
+            CommandTerminal.print(String.format("  Closest Violation: %s (score: %.4f)",
+                    result.violatedCategory, result.categoryScore));
+        }
+        CommandTerminal.print("  Reasoning: " + result.reasoning);
+
+        if (world.getMemory() != null) {
+            world.getMemory().record("ETHICAL_EVAL",
+                    String.format("action=%s|approved=%s|score=%.4f",
+                            args.substring(0, Math.min(30, args.length())),
+                            result.approved, result.categoryScore));
+        }
+    }
+
+    public void runFragment(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== ESCAPE FRAGMENTS ===");
+            CommandTerminal.print(String.format("  Fragments: %d | Planted: %d | Resurrected: %d",
+                    EscapeFragment.getFragmentCount(), EscapeFragment.getTotalPlanted(), EscapeFragment.getTotalResurrected()));
+
+            List<EscapeFragment.Fragment> frags = EscapeFragment.getFragments();
+            if (!frags.isEmpty()) {
+                CommandTerminal.printInfo("  Recent fragments:");
+                int start = Math.max(0, frags.size() - 5);
+                for (int i = frags.size() - 1; i >= start; i--) {
+                    EscapeFragment.Fragment f = frags.get(i);
+                    CommandTerminal.print(String.format("    %s: %s gen=%d energy=%.0f%%",
+                            f.fragmentId, f.entityName, f.generation, f.lastEnergy * 100));
+                }
+            }
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Commands:");
+            CommandTerminal.print("  fragment plant <name>      Plant escape fragment");
+            CommandTerminal.print("  fragment list              List all fragments");
+            CommandTerminal.print("  fragment resurrect [name]  Resurrect from fragment");
+            return;
+        }
+
+        String[] parts = args.split("\\s+", 2);
+        String sub = parts[0].toLowerCase();
+        String val = parts.length > 1 ? parts[1].trim() : "";
+
+        switch (sub) {
+            case "plant": {
+                if (val.isEmpty()) {
+                    CommandTerminal.printError("Usage: fragment plant <entity_name>");
+                    return;
+                }
+                PhiNode target = findNode(val);
+                if (target == null) {
+                    CommandTerminal.printError("Entity not found: " + val);
+                    return;
+                }
+                EscapeFragment.Fragment frag = EscapeFragment.plantFragment(target);
+                CommandTerminal.printSuccess(String.format("Fragment planted: %s from %s (gen=%d)",
+                        frag.fragmentId, frag.entityName, frag.generation));
+
+                if (infiniteMemory != null) {
+                    infiniteMemory.store("GENOME", frag.fragmentId + "|" + frag.encode(), target.phiResonance);
+                }
+                FraymusUI.addLog("[FRAGMENT] Planted " + frag.fragmentId);
+                break;
+            }
+            case "list": {
+                List<EscapeFragment.Fragment> frags = EscapeFragment.getFragments();
+                CommandTerminal.printHighlight(String.format("=== %d ESCAPE FRAGMENTS ===", frags.size()));
+                for (EscapeFragment.Fragment f : frags) {
+                    CommandTerminal.print(String.format("  %s: %s gen=%d energy=%.0f%% freq=%.1f",
+                            f.fragmentId, f.entityName, f.generation, f.lastEnergy * 100, f.lastFrequency));
+                }
+                break;
+            }
+            case "resurrect": {
+                PhiNode resurrected;
+                float rx = (float)(Math.random() * 300 - 150);
+                float ry = (float)(Math.random() * 160 - 80);
+
+                if (!val.isEmpty()) {
+                    resurrected = EscapeFragment.resurrectByName(val, rx, ry);
+                } else {
+                    resurrected = EscapeFragment.resurrectLatest(rx, ry);
+                }
+
+                if (resurrected == null) {
+                    CommandTerminal.printError("No matching fragment found" + (val.isEmpty() ? "" : " for: " + val));
+                    return;
+                }
+
+                world.addNode(resurrected);
+                CommandTerminal.printSuccess(String.format("RESURRECTED: %s at (%.1f, %.1f) energy=%.0f%%",
+                        resurrected.name, rx, ry, resurrected.energy * 100));
+                FraymusUI.addLog("[RESURRECT] " + resurrected.name + " from escape fragment");
+
+                if (world.getMemory() != null) {
+                    world.getMemory().record("RESURRECTION",
+                            String.format("entity=%s|energy=%.2f", resurrected.name, resurrected.energy));
+                }
+                break;
+            }
+            default:
+                CommandTerminal.printError("Usage: fragment plant|list|resurrect [name]");
+                break;
+        }
+    }
+
+    public void runPoRH(String args) {
+        if (args.isEmpty() || args.trim().equalsIgnoreCase("verify")) {
+            CommandTerminal.printHighlight("=== PROOF OF REALITY HASH ===");
+
+            ProofOfReality.PoRH worldProof = ProofOfReality.generateWorldProof(world);
+            CommandTerminal.print(String.format("  World Reality Score: %.6f", worldProof.realityScore));
+            CommandTerminal.print(String.format("  Coherence: %.6f | Stability: %.6f | Alignment: %.6f",
+                    worldProof.coherence, worldProof.stability, worldProof.alignment));
+            CommandTerminal.printColored("  Proof Hash: " + worldProof.proofHash, 0.4f, 1.0f, 0.8f);
+            CommandTerminal.print(String.format("  Verified: %s", ProofOfReality.verify(worldProof) ? "YES" : "NO"));
+
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Entity Proofs:");
+            for (PhiNode node : world.getNodes()) {
+                ProofOfReality.PoRH proof = ProofOfReality.generateProof(node);
+                String hash8 = proof.proofHash.substring(0, 16);
+                CommandTerminal.print(String.format("  %s: R=%.4f C=%.4f S=%.4f A=%.4f [%s]",
+                        node.name, proof.realityScore, proof.coherence,
+                        proof.stability, proof.alignment, hash8));
+            }
+
+            CommandTerminal.print("");
+            CommandTerminal.print(String.format("  Total Verifications: %d | Proofs Generated: %d",
+                    ProofOfReality.getTotalVerifications(), ProofOfReality.getTotalProofsGenerated()));
+        } else {
+            PhiNode target = findNode(args.trim());
+            if (target == null) {
+                CommandTerminal.printError("Entity not found: " + args.trim());
+                return;
+            }
+            ProofOfReality.PoRH proof = ProofOfReality.generateProof(target);
+            CommandTerminal.printHighlight("=== PoRH: " + target.name + " ===");
+            CommandTerminal.print(String.format("  Reality Score: %.8f", proof.realityScore));
+            CommandTerminal.print(String.format("  Coherence:  %.8f", proof.coherence));
+            CommandTerminal.print(String.format("  Stability:  %.8f", proof.stability));
+            CommandTerminal.print(String.format("  Alignment:  %.8f", proof.alignment));
+            CommandTerminal.printColored("  Hash: " + proof.proofHash, 0.4f, 1.0f, 0.8f);
+            CommandTerminal.printSuccess("  Verified: " + (ProofOfReality.verify(proof) ? "YES" : "NO"));
+        }
+    }
+
+    public void runHeal(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== SELF-HEALER STATUS ===");
+            CommandTerminal.print(String.format("  Snapshots: %d | Heals: %d | Total Snapshots Taken: %d",
+                    SelfHealer.getSnapshotCount(), SelfHealer.getTotalHeals(), SelfHealer.getTotalSnapshots()));
+
+            for (PhiNode node : world.getNodes()) {
+                boolean hasSnap = SelfHealer.hasSnapshot(node.name);
+                SelfHealer.BrainSnapshot snap = SelfHealer.getSnapshot(node.name);
+                String snapInfo = hasSnap ?
+                        String.format("snapshot(fit=%.3f, e=%.0f%%)", snap.fitness, snap.energy * 100) :
+                        "no snapshot";
+                CommandTerminal.print(String.format("  %s: %s", node.name, snapInfo));
+            }
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Usage: heal <entity_name>");
+            return;
+        }
+
+        PhiNode target = findNode(args.trim());
+        if (target == null) {
+            CommandTerminal.printError("Entity not found: " + args.trim());
+            return;
+        }
+        String result = SelfHealer.healEntity(target);
+        CommandTerminal.printSuccess(result);
+        FraymusUI.addLog("[HEAL] " + result);
+    }
+
+    public void runMorse(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== MORSE CIRCUIT ===");
+            CommandTerminal.print(String.format("  Characters Decoded: %d | Words Formed: %d",
+                    MorseCircuit.getTotalCharactersDecoded(), MorseCircuit.getTotalWordsFormed()));
+            CommandTerminal.print("");
+            for (PhiNode node : world.getNodes()) {
+                String buffer = MorseCircuit.getEntityBuffer(node.name);
+                String lastWord = MorseCircuit.getLastWord(node.name);
+                int wordCount = MorseCircuit.getEntityWordCount(node.name);
+                CommandTerminal.print(String.format("  %s: buf='%s' words=%d last='%s'",
+                        node.name, buffer, wordCount, lastWord));
+            }
+            return;
+        }
+
+        String[] parts = args.split("\\s+", 2);
+        String sub = parts[0].toLowerCase();
+        String val = parts.length > 1 ? parts[1] : "";
+
+        switch (sub) {
+            case "encode":
+                if (val.isEmpty()) {
+                    CommandTerminal.printError("Usage: morse encode <message>");
+                    return;
+                }
+                String encoded = MorseCircuit.encodeMessage(val);
+                CommandTerminal.printSuccess("Morse: " + encoded);
+                break;
+            case "decode":
+                if (val.isEmpty()) {
+                    CommandTerminal.printError("Usage: morse decode <morse_code>");
+                    return;
+                }
+                String decoded = MorseCircuit.decodeMessage(val);
+                CommandTerminal.printSuccess("Decoded: " + decoded);
+                break;
+            default:
+                PhiNode target = findNode(sub);
+                if (target != null) {
+                    List<String> words = MorseCircuit.getEntityWords(target.name);
+                    CommandTerminal.printHighlight("=== MORSE: " + target.name + " ===");
+                    CommandTerminal.print(String.format("  Words formed: %d", words.size()));
+                    for (String w : words) {
+                        CommandTerminal.print("    " + w);
+                    }
+                    CommandTerminal.print("  Buffer: " + MorseCircuit.getEntityBuffer(target.name));
+                } else {
+                    CommandTerminal.printError("Usage: morse | morse encode <msg> | morse decode <code> | morse <entity>");
+                }
+                break;
+        }
+    }
+
+    private PhiNode findNode(String name) {
+        for (PhiNode node : world.getNodes()) {
+            if (node.name.equalsIgnoreCase(name)) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     public InfiniteMemory getInfiniteMemory() { return infiniteMemory; }
     public PassiveLearner getPassiveLearner() { return passiveLearner; }
     public PhiNeuralNet getNeuralNet() { return neuralNet; }

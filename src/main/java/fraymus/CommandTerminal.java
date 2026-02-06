@@ -202,6 +202,21 @@ public class CommandTerminal {
             case "scrape":
                 handleScrape(args);
                 break;
+            case "ethics":
+                handleEthics(args);
+                break;
+            case "fragment":
+                handleFragment(args);
+                break;
+            case "porh":
+                handlePoRH(args);
+                break;
+            case "heal":
+                handleHeal(args);
+                break;
+            case "morse":
+                handleMorse(args);
+                break;
             case "clear":
                 outputLines.clear();
                 printBanner();
@@ -265,6 +280,13 @@ public class CommandTerminal {
         print("  scrape search <q>   Search scraped knowledge");
         print("  scrape topic <name> Get knowledge on a topic");
         print("");
+        printColored("--- ADVANCED SUBSYSTEMS ---", 0.5f, 0.8f, 1.0f);
+        print("  ethics <action>     Evaluate action against ethical engine");
+        print("  fragment            Manage escape fragments (plant/list/resurrect)");
+        print("  porh [entity]       Generate Proof of Reality Hash");
+        print("  heal [entity]       Self-healer status / force heal entity");
+        print("  morse               Morse circuit status / encode / decode");
+        print("");
         printColored("--- PHYSICS ---", 0.5f, 0.8f, 1.0f);
         print("  physics gravity <f> Set gravity force");
         print("  physics speed <f>   Set simulation speed multiplier");
@@ -322,6 +344,16 @@ public class CommandTerminal {
             print(String.format("  Knowledge Scraper: %d files, %d chunks, %d pages",
                     scraper.getTotalFilesScraped(), scraper.getTotalChunksStored(), scraper.getTotalPagesProcessed()));
         }
+        print(String.format("  Self-Healer: %d snapshots, %d heals",
+                SelfHealer.getSnapshotCount(), SelfHealer.getTotalHeals()));
+        print(String.format("  Ethical Engine: %d evals (%d approved, %d blocked)",
+                EthicalEngine.getTotalEvaluations(), EthicalEngine.getTotalApproved(), EthicalEngine.getTotalBlocked()));
+        print(String.format("  Escape Fragments: %d planted, %d resurrected",
+                EscapeFragment.getTotalPlanted(), EscapeFragment.getTotalResurrected()));
+        print(String.format("  Morse Circuit: %d chars, %d words",
+                MorseCircuit.getTotalCharactersDecoded(), MorseCircuit.getTotalWordsFormed()));
+        print(String.format("  PoRH Proofs: %d generated, %d verified",
+                ProofOfReality.getTotalProofsGenerated(), ProofOfReality.getTotalVerifications()));
     }
 
     private static void showNodes() {
@@ -577,5 +609,30 @@ public class CommandTerminal {
     private static void handleScrape(String args) {
         if (experimentManager == null) { printError("Experiment manager not ready"); return; }
         experimentManager.runScrape(args);
+    }
+
+    private static void handleEthics(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runEthics(args);
+    }
+
+    private static void handleFragment(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runFragment(args);
+    }
+
+    private static void handlePoRH(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runPoRH(args);
+    }
+
+    private static void handleHeal(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runHeal(args);
+    }
+
+    private static void handleMorse(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runMorse(args);
     }
 }

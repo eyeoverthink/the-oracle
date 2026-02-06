@@ -62,10 +62,13 @@ public class PhiWorld {
             if (!n.isAlive()) dead.add(n);
         }
         for (PhiNode n : dead) {
+            EscapeFragment.plantDeathFragment(n, jade.Window.getInfiniteMemory());
+            SelfHealer.removeSnapshot(n.name);
+            MorseCircuit.removeEntity(n.name);
             memory.recordDeath(n.name, n.age, n.energy);
             totalDeaths++;
             if (worldTick % 60 == 0) {
-                FraymusUI.addLog(String.format("[ENTROPY] %s expired (age %d)", n.name, n.age));
+                FraymusUI.addLog(String.format("[ENTROPY] %s expired (age %d) - escape fragment planted", n.name, n.age));
             }
         }
         nodes.removeIf(n -> !n.isAlive());
