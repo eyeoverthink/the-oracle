@@ -53,7 +53,7 @@ public class FraymusMain {
         world.addLaw(new Laws.Inertia());
         world.addLaw(new Laws.HarmonicResonance());
         world.addLaw(new Laws.ScottPredictionLaw(1.0f));
-        world.addLaw(new Laws.EntanglementLaw());
+        world.addLaw(new Laws.EntanglementLaw(world.getMemory()));
         
         PhiNode kai = new PhiNode("KAI", 5, 5);
         System.out.println(">> Living Genesis: KAI");

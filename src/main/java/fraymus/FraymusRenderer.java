@@ -85,6 +85,47 @@ public class FraymusRenderer {
             );
             DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius, glowColor, 1);
 
+            if (node.spikeFlash) {
+                float spikeRadius = radius * 2.5f;
+                float pulse = (float)(Math.sin(System.nanoTime() * 1e-8) * 0.5 + 0.5);
+                Vector3f spikeColor = new Vector3f(
+                        1.0f,
+                        pulse * 0.8f,
+                        pulse * 0.3f
+                );
+                DebugDraw.addCircle(new Vector2f(node.x, node.y), spikeRadius, spikeColor, 1);
+                DebugDraw.addCircle(new Vector2f(node.x, node.y), spikeRadius * 1.3f,
+                        new Vector3f(1.0f, 0.5f * pulse, 0.0f), 1);
+            }
+
+            int[] outputs = node.brain.getLastOutputs();
+            if (outputs.length > 0) {
+                if (node.brain.wantsToSeek(outputs)) {
+                    float arrowLen = radius * 1.5f;
+                    float angle = (float) Math.atan2(node.vy, node.vx);
+                    Vector2f arrowEnd = new Vector2f(
+                            node.x + (float) Math.cos(angle) * arrowLen,
+                            node.y + (float) Math.sin(angle) * arrowLen
+                    );
+                    DebugDraw.addLine2D(new Vector2f(node.x, node.y), arrowEnd,
+                            new Vector3f(0.0f, 1.0f, 0.5f), 1);
+                }
+                if (node.brain.wantsToFlee(outputs)) {
+                    float arrowLen = radius * 1.5f;
+                    float angle = (float) Math.atan2(node.vy, node.vx);
+                    Vector2f arrowEnd = new Vector2f(
+                            node.x + (float) Math.cos(angle) * arrowLen,
+                            node.y + (float) Math.sin(angle) * arrowLen
+                    );
+                    DebugDraw.addLine2D(new Vector2f(node.x, node.y), arrowEnd,
+                            new Vector3f(1.0f, 0.2f, 0.2f), 1);
+                }
+                if (node.brain.wantsToReproduce(outputs)) {
+                    DebugDraw.addCircle(new Vector2f(node.x, node.y), radius * 0.3f,
+                            new Vector3f(0.3f, 1.0f, 0.3f), 1);
+                }
+            }
+
             float barWidth = 4.0f;
             float barY = node.y - radius - 1.5f;
             float barX = node.x - barWidth * 0.5f;
@@ -108,5 +149,17 @@ public class FraymusRenderer {
                     barBg, 1
             );
         }
+
+        renderBoundary();
+    }
+
+    private static void renderBoundary() {
+        float minX = -180.0f, maxX = 180.0f, minY = -100.0f, maxY = 100.0f;
+        Vector3f boundaryColor = new Vector3f(0.15f, 0.15f, 0.25f);
+
+        DebugDraw.addLine2D(new Vector2f(minX, minY), new Vector2f(maxX, minY), boundaryColor, 1);
+        DebugDraw.addLine2D(new Vector2f(maxX, minY), new Vector2f(maxX, maxY), boundaryColor, 1);
+        DebugDraw.addLine2D(new Vector2f(maxX, maxY), new Vector2f(minX, maxY), boundaryColor, 1);
+        DebugDraw.addLine2D(new Vector2f(minX, maxY), new Vector2f(minX, minY), boundaryColor, 1);
     }
 }

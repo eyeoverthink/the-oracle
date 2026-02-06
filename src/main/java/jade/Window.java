@@ -115,11 +115,16 @@ public class Window {
 
     private void initPhiWorld() {
         phiWorld = new PhiWorld();
+        GenesisMemory memory = phiWorld.getMemory();
 
         phiWorld.addLaw(new Laws.Inertia());
         phiWorld.addLaw(new Laws.HarmonicResonance());
-        phiWorld.addLaw(new Laws.EntanglementLaw());
+        phiWorld.addLaw(new Laws.EntanglementLaw(memory));
         phiWorld.addLaw(new Laws.ScottPredictionLaw(2.0f));
+        phiWorld.addLaw(new Laws.ResonanceSpikeLaw(memory));
+        phiWorld.addLaw(new Laws.BrainLaw(phiWorld, memory));
+        phiWorld.addLaw(new Laws.ReproductionLaw(phiWorld, memory));
+        phiWorld.addLaw(new Laws.BoundaryLaw(-180.0f, 180.0f, -100.0f, 100.0f));
 
         PhiNode alpha = new PhiNode("Alpha", 0.0f, 0.0f);
         alpha.vx = 0.5f;
@@ -153,7 +158,8 @@ public class Window {
         phiWorld.addNode(epsilon);
 
         FraymusUI.addLog("World initialized with 5 PhiNode entities");
-        FraymusUI.addLog("Laws: Inertia, HarmonicResonance, Entanglement, ScottPrediction");
+        FraymusUI.addLog("Laws: Inertia, Resonance, Entangle, Scott, Spike, Brain, Reproduction, Boundary");
+        FraymusUI.addLog("Genesis Memory chain started - recording all events");
     }
 
     private void loop() {
