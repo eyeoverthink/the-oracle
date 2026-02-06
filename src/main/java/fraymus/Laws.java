@@ -134,6 +134,7 @@ public class Laws {
             List<PhiNode> allNodes = world.getNodes();
 
             int nearbyCount = 0;
+            int nearbyEntangled = 0;
             float totalFreqDiff = 0;
             PhiNode nearest = null;
             float nearestDist = Float.MAX_VALUE;
@@ -146,6 +147,9 @@ public class Laws {
                 if (dist < 50.0f) {
                     nearbyCount++;
                     totalFreqDiff += Math.abs(n.frequency - other.frequency);
+                    if (Math.abs(n.frequency - other.frequency) < 0.5f) {
+                        nearbyEntangled++;
+                    }
                 }
                 if (dist < nearestDist) {
                     nearestDist = dist;
@@ -164,6 +168,18 @@ public class Laws {
 
             int[] outputs = n.brain.compute(sensors);
             String decision = n.brain.interpretOutputs(outputs);
+
+            n.adaptiveEngine.recordFitnessSample(n.energy, spikeActive, nearbyEntangled, false);
+
+            AdaptiveLogicEngine.TrialResult trialResult = n.adaptiveEngine.tickTrial(n.brain);
+            if (trialResult == AdaptiveLogicEngine.TrialResult.ADOPTED) {
+                if (memory != null) {
+                    memory.record("ADAPTATION", String.format("%s|adopted|fitness=%.3f", n.name, n.adaptiveEngine.getCurrentFitness()));
+                }
+                FraymusUI.addLog(String.format("[ADAPT] %s adopted new strategy (fitness=%.3f)", n.name, n.adaptiveEngine.getCurrentFitness()));
+            } else if (trialResult == AdaptiveLogicEngine.TrialResult.REVERTED) {
+                FraymusUI.addLog(String.format("[ADAPT] %s reverted trial (not fit enough)", n.name));
+            }
 
             if (n.brain.wantsToSeek(outputs) && nearest != null) {
                 float dx = nearest.x - n.x;
@@ -192,10 +208,12 @@ public class Laws {
             }
 
             if (n.brain.wantsToMutate(outputs) && spikeActive) {
-                n.brain.mutate();
-                if (memory != null && tickCounter % 60 == 0) {
-                    memory.recordMutation(n.name, "spike-triggered");
-                    FraymusUI.addLog(String.format("[MUTATE] %s brain rewired during spike", n.name));
+                if (!n.adaptiveEngine.isInTrial()) {
+                    n.adaptiveEngine.beginTrial(n.brain);
+                    if (memory != null && tickCounter % 60 == 0) {
+                        memory.recordMutation(n.name, "spike-trial-started");
+                        FraymusUI.addLog(String.format("[TRIAL] %s began mutation trial during spike", n.name));
+                    }
                 }
             }
 

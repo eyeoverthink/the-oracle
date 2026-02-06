@@ -110,6 +110,8 @@ public class Window {
 
         DebugDraw.start();
 
+        FraymusUI.setArenaTextureId(framebuffer.getTextureId());
+
         initPhiWorld();
     }
 

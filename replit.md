@@ -121,8 +121,30 @@ SHA-256 hashed event chain recording:
 - DEATH: entity name, age, final energy
 - BRAIN_DECISION: entity name, active outputs
 - MUTATION: entity name, trigger condition
+- ADAPTATION: entity name, adopted/reverted, fitness score
 
 Chain integrity verified via prevHash linkage. Displayed in Genesis Memory UI panel with color-coded events.
+
+## Adaptive Logic Engine (Ant-Colony Intelligence)
+
+Each entity carries an AdaptiveLogicEngine that enables self-evolving behavior:
+
+| Component | Description |
+|-----------|-------------|
+| **StrategyGenome** | Compact snapshot of brain gate configuration (types + inputs) with fitness scoring |
+| **Trial System** | Mutations are tested for 300 ticks; adopted if fitness improves, reverted if not |
+| **Proven Strategies** | Up to 10 successful configurations stored per entity |
+| **Strategy Inheritance** | Children inherit parent strategies (0.8 fitness decay) through DNA serialization |
+| **Fitness Tracking** | Continuous sampling: energy (40%), spike activity (20%), entanglement (30%), reproduction (30%) |
+
+**Ant-Colony Behavior**: Individual simple rules -> colony-level intelligence emerges as successful strategies propagate through generations. Like ants leaving pheromone trails, entities leave "genetic knowledge trails" through their offspring.
+
+## System Verification
+
+Three data points prove the system is alive and mathematically consistent:
+1. **Genesis Hash**: Latest SHA-256 block hash from the blockchain chain
+2. **Irrational State**: Phi^75 computed to 50 decimal digits via BigDecimal (MathContext precision 80)
+3. **Entity Soul**: phi_resonance, oscillation_count, verified against Phi-Harmonic time dilation formula
 
 ## Key Behaviors
 
@@ -132,8 +154,9 @@ Chain integrity verified via prevHash linkage. Displayed in Genesis Memory UI pa
 4. **Resonance Spikes**: Per-entity phi resonance (oscillation-based, unique per entity) triggers quantum actions at > 0.95
 5. **Brain-Driven Behavior**: Logic gates process sensor data to produce behavioral decisions every 6 ticks
 6. **Reproduction**: High-energy entities with brain consent spawn children during resonance spikes
-7. **Living Code Generation**: Evolved populations generate self-contained Java entities
-8. **Genesis Memory**: Every significant event recorded in blockchain for permanent history
+7. **Adaptive Evolution**: Brain mutations tested as trials; successful strategies saved and inherited
+8. **Living Code Generation**: Evolved populations generate self-contained Java entities
+9. **Genesis Memory**: Every significant event recorded in blockchain for permanent history
 
 ## Technical Details
 
@@ -188,3 +211,13 @@ Chain integrity verified via prevHash linkage. Displayed in Genesis Memory UI pa
   - FraymusUI: 3 new panels (Brain Inspector, Quantum Clock, Genesis Memory)
   - FraymusRenderer: spike flash effects, brain activity indicators, boundary rendering
   - Per-entity unique resonance using oscillation-based phaseOffset
+- **MAJOR: Adaptive Logic Engine + Arena View + System Verification**:
+  - Added AdaptiveLogicEngine.java: per-entity fitness tracking, trial mutations, strategy memory
+  - Added StrategyGenome.java: compact brain configuration snapshots with encode/decode/similarity
+  - Added SystemVerification.java: Phi^75 to 50 digits (BigDecimal), genesis hash, entity soul data
+  - Arena View panel: framebuffer rendered into ImGui image panel (UV-flipped for correct orientation)
+  - Adaptive Logic panel: fitness display, trial status, proven strategy list
+  - System Verification panel: live display of 3 verification data points
+  - BrainLaw upgraded: mutations now go through trial system, fitness continuously sampled
+  - Strategy inheritance: children receive parent strategies via DNA serialization
+  - ADAPTATION events recorded to genesis memory blockchain
