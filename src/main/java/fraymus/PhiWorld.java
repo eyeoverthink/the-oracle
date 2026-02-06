@@ -8,12 +8,16 @@ public class PhiWorld {
     private List<PhiNode> pendingBirths = new ArrayList<>();
     private List<PhiLaw> laws = new ArrayList<>();
     private GenesisMemory memory;
+    private ConceptArena arena;
+    private ColonyCoach coach;
     private int totalBirths = 0;
     private int totalDeaths = 0;
     private int worldTick = 0;
 
     public PhiWorld() {
         this.memory = new GenesisMemory();
+        this.arena = new ConceptArena();
+        this.coach = new ColonyCoach(arena, memory);
     }
 
     public void addNode(PhiNode node) {
@@ -51,6 +55,8 @@ public class PhiWorld {
             node.updateInternalState(dt, nowNanos);
         }
 
+        coach.tick(nodes, worldTick);
+
         List<PhiNode> dead = new ArrayList<>();
         for (PhiNode n : nodes) {
             if (!n.isAlive()) dead.add(n);
@@ -68,6 +74,8 @@ public class PhiWorld {
     public List<PhiNode> getNodes() { return nodes; }
     public int getPopulation() { return nodes.size(); }
     public GenesisMemory getMemory() { return memory; }
+    public ConceptArena getArena() { return arena; }
+    public ColonyCoach getCoach() { return coach; }
     public int getTotalBirths() { return totalBirths; }
     public int getTotalDeaths() { return totalDeaths; }
     public int getWorldTick() { return worldTick; }

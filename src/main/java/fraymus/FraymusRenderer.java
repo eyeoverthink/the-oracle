@@ -85,6 +85,11 @@ public class FraymusRenderer {
             );
             DebugDraw.addCircle(new Vector2f(node.x, node.y), glowRadius, glowColor, 1);
 
+            float[] roleColor = node.getRole().color;
+            float roleRadius = radius * 0.5f;
+            DebugDraw.addCircle(new Vector2f(node.x, node.y), roleRadius,
+                    new Vector3f(roleColor[0], roleColor[1], roleColor[2]), 1);
+
             if (node.spikeFlash) {
                 float spikeRadius = radius * 2.5f;
                 float pulse = (float)(Math.sin(System.nanoTime() * 1e-8) * 0.5 + 0.5);

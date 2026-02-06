@@ -99,6 +99,21 @@ public class GenesisMemory {
         return record("MUTATION", data);
     }
 
+    public Block recordColonyEvent(String coachAction, String details) {
+        String data = String.format("coach|%s|%s", coachAction, details);
+        return record("COLONY_EVENT", data);
+    }
+
+    public Block recordConceptBattle(String winnerHash, String loserHash, double winnerFit, double loserFit) {
+        String data = String.format("%s>%s|wFit=%.3f|lFit=%.3f", winnerHash, loserHash, winnerFit, loserFit);
+        return record("CONCEPT_BATTLE", data);
+    }
+
+    public Block recordCodeGenerated(String entityName, String role, String conceptHash, double fitness) {
+        String data = String.format("%s|%s|%s|fit=%.3f", entityName, role, conceptHash, fitness);
+        return record("CODE_GENERATED", data);
+    }
+
     public List<Block> getChain() { return chain; }
     public int getChainLength() { return chain.size(); }
 
