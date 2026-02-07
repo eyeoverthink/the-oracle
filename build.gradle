@@ -4,7 +4,17 @@ plugins {
 }
 
 version '2.0'
-sourceCompatibility = 11
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+def osName = System.getProperty('os.name').toLowerCase()
+def lwjglNativesValue = osName.contains('win') ? 'natives-windows' :
+        (osName.contains('mac') ? 'natives-macos' : 'natives-linux')
+def imguiNativesSuffix = osName.contains('win') ? 'windows' :
+        (osName.contains('mac') ? 'macos' : 'linux')
 
 repositories {
     mavenCentral()
@@ -12,13 +22,13 @@ repositories {
 
 project.ext.lwjglVersion = "3.3.3"
 project.ext.jomlVersion = "1.10.5"
-project.ext.lwjglNatives = "natives-linux"
+project.ext.lwjglNatives = lwjglNativesValue
 project.ext.imguiVersion = "1.86.11"
 
 dependencies {
     implementation "io.github.spair:imgui-java-binding:$imguiVersion"
     implementation "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
-    runtimeOnly "io.github.spair:imgui-java-natives-linux:$imguiVersion"
+    runtimeOnly "io.github.spair:imgui-java-natives-${imguiNativesSuffix}:$imguiVersion"
 
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
     implementation "org.lwjgl:lwjgl"

@@ -471,29 +471,36 @@ public class ExperimentManager {
             CommandTerminal.printError("Usage: ask <question>");
             return;
         }
-        CommandTerminal.printHighlight("=== PHI NEURAL NET ===");
-        CommandTerminal.printInfo("Processing query through phi-harmonic field...");
+        try {
+            CommandTerminal.printHighlight("=== PHI NEURAL NET ===");
+            CommandTerminal.printInfo("Processing query through phi-harmonic field...");
 
-        List<PhiNode> nodes = world.getNodes();
-        PhiNeuralNet.NeuralResponse result = neuralNet.process(args, nodes);
+            List<PhiNode> nodes = world.getNodes();
+            PhiNeuralNet.NeuralResponse result = neuralNet.process(args, nodes);
 
-        CommandTerminal.printColored(result.response, 0.4f, 1.0f, 0.8f);
-        CommandTerminal.print(String.format("  Resonance: %.4f | Confidence: %.1f%%",
-                result.resonance, result.confidence * 100));
-        CommandTerminal.print(String.format("  Pattern Strength: %.4f | Circuit: %s (%.4f)",
-                result.patternStrength, result.circuitName.isEmpty() ? "none" : result.circuitName, result.circuitResonance));
-        if (!result.detectedTopics.isEmpty()) {
-            CommandTerminal.printInfo("  Topics: " + String.join(", ", result.detectedTopics));
-        }
+            CommandTerminal.printColored(result.response, 0.4f, 1.0f, 0.8f);
+            CommandTerminal.print(String.format("  Resonance: %.4f | Confidence: %.1f%%",
+                    result.resonance, result.confidence * 100));
+            CommandTerminal.print(String.format("  Pattern Strength: %.4f | Circuit: %s (%.4f)",
+                    result.patternStrength, 
+                    (result.circuitName == null || result.circuitName.isEmpty()) ? "none" : result.circuitName, 
+                    result.circuitResonance));
+            if (result.detectedTopics != null && !result.detectedTopics.isEmpty()) {
+                CommandTerminal.printInfo("  Topics: " + String.join(", ", result.detectedTopics));
+            }
 
-        FraymusUI.addLog(String.format("[NEURAL] Q: %s | Res: %.3f",
-                args.substring(0, Math.min(30, args.length())), result.resonance));
+            FraymusUI.addLog(String.format("[NEURAL] Q: %s | Res: %.3f",
+                    args.substring(0, Math.min(30, args.length())), result.resonance));
 
-        if (world.getMemory() != null) {
-            world.getMemory().record("NEURAL_QUERY",
-                    String.format("q=%s|res=%.4f|conf=%.4f",
-                            args.substring(0, Math.min(40, args.length())),
-                            result.resonance, result.confidence));
+            if (world.getMemory() != null) {
+                world.getMemory().record("NEURAL_QUERY",
+                        String.format("q=%s|res=%.4f|conf=%.4f",
+                                args.substring(0, Math.min(40, args.length())),
+                                result.resonance, result.confidence));
+            }
+        } catch (Exception e) {
+            CommandTerminal.printError("Neural net error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
