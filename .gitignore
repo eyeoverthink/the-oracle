@@ -15,3 +15,5 @@ out/
 gradle/
 gradlew
 gradlew.bat
+data/
+bin/
