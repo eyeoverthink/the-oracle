@@ -226,6 +226,12 @@ public class CommandTerminal {
             case "morse":
                 handleMorse(args);
                 break;
+            case "diag":
+                handleDiag(args);
+                break;
+            case "brain":
+                handleBrain(args);
+                break;
             case "clear":
                 outputLines.clear();
                 printBanner();
@@ -299,6 +305,7 @@ public class CommandTerminal {
         print("  scrape topic <name> Get knowledge on a topic");
         print("");
         printColored("--- ADVANCED SUBSYSTEMS ---", 0.5f, 0.8f, 1.0f);
+        print("  brain [entity]      Show brain/gates status, think, mutate");
         print("  ethics <action>     Evaluate action against ethical engine");
         print("  fragment            Manage escape fragments (plant/list/resurrect)");
         print("  porh [entity]       Generate Proof of Reality Hash");
@@ -692,5 +699,32 @@ public class CommandTerminal {
     private static void handleMorse(String args) {
         if (experimentManager == null) { printError("Experiment manager not ready"); return; }
         experimentManager.runMorse(args);
+    }
+
+    private static void handleDiag(String args) {
+        String sub = args.trim().toLowerCase();
+        switch (sub) {
+            case "":
+            case "paths":
+                SystemDiagnostics.printWorkingDirectory();
+                break;
+            case "memory":
+                if (experimentManager != null) {
+                    SystemDiagnostics.printMemoryBackendStatus(experimentManager.getInfiniteMemory().getConfig());
+                } else {
+                    printError("Experiment manager not ready");
+                }
+                break;
+            default:
+                printHighlight("=== DIAGNOSTICS ===");
+                print("  diag paths   - Check working directory and file paths");
+                print("  diag memory  - Check memory backend status (MongoDB/local)");
+                break;
+        }
+    }
+
+    private static void handleBrain(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runBrain(args);
     }
 }

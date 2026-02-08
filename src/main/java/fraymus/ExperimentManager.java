@@ -18,8 +18,8 @@ public class ExperimentManager {
     
     // Ollama integration (lazy init)
     private OllamaIntegration ollama = null;
-    private boolean useCloudOllama = true;
-    private String currentModel = "qwen3-coder-next";
+    private boolean useCloudOllama = false;
+    private String currentModel = "llama3.2:1b";
 
     public ExperimentManager(PhiWorld world, InfiniteMemory infiniteMemory,
                               PassiveLearner passiveLearner, PhiNeuralNet neuralNet,
@@ -31,7 +31,8 @@ public class ExperimentManager {
         this.qrGenome = qrGenome;
         this.knowledgeScraper = knowledgeScraper;
         this.codeEvolver = new SelfCodeEvolver(passiveLearner, infiniteMemory);
-        // Ollama is lazy-initialized when first used
+        // Initialize Ollama - try local first, fallback to cloud
+        initOllama();
     }
 
     public void runPrimeTest(String args) {
@@ -1210,6 +1211,80 @@ public class ExperimentManager {
         }
     }
 
+    public void runBrain(String args) {
+        if (args.isEmpty()) {
+            CommandTerminal.printHighlight("=== LOGIC BRAIN STATUS ===");
+            CommandTerminal.print("Usage: brain <entity> - Show brain details for entity");
+            CommandTerminal.print("       brain <entity> think - Trigger brain computation");
+            CommandTerminal.print("       brain <entity> mutate - Trigger mutation trial");
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("Entities with brains:");
+            for (PhiNode node : world.getNodes()) {
+                String decision = node.brain.getLastDecision();
+                double fitness = node.adaptiveEngine.getCurrentFitness();
+                CommandTerminal.print(String.format("  %s: fitness=%.3f, decision=%s, gates=%d",
+                        node.name, fitness, decision, node.brain.getGateCount()));
+            }
+            return;
+        }
+
+        String[] parts = args.split("\\s+", 2);
+        String entityName = parts[0];
+        String sub = parts.length > 1 ? parts[1].toLowerCase() : "";
+
+        PhiNode target = findNode(entityName);
+        if (target == null) {
+            CommandTerminal.printError("Entity not found: " + entityName);
+            return;
+        }
+
+        if (sub.isEmpty()) {
+            // Show brain details
+            CommandTerminal.printHighlight("=== BRAIN: " + target.name + " ===");
+            CommandTerminal.print("  Gate Count: " + target.brain.getGateCount());
+            CommandTerminal.print("  Encoding: " + target.brain.encode());
+            CommandTerminal.print("  Last Decision: " + target.brain.getLastDecision());
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("  Adaptive Engine:");
+            CommandTerminal.print("    Fitness: " + String.format("%.4f", target.adaptiveEngine.getCurrentFitness()));
+            CommandTerminal.print("    Trials: " + target.adaptiveEngine.getTotalTrials());
+            CommandTerminal.print("    Adopted: " + target.adaptiveEngine.getAdaptationCount());
+            CommandTerminal.print("    Reverted: " + target.adaptiveEngine.getRevertCount());
+            CommandTerminal.print("    Strategies: " + target.adaptiveEngine.getProvenStrategyCount());
+            CommandTerminal.print("    In Trial: " + target.adaptiveEngine.isInTrial());
+            CommandTerminal.print("");
+            CommandTerminal.printInfo("  Gates:");
+            for (int i = 0; i < target.brain.getGateCount(); i++) {
+                LogicGate g = target.brain.gates.get(i);
+                CommandTerminal.print(String.format("    [%d] %s(in1=%d, in2=%d) state=%d",
+                        i, g.getTypeName(), g.in1, g.in2, g.state));
+            }
+        } else if (sub.equals("think")) {
+            int[] inputs = LogicBrain.buildSensorInputs(
+                    world.getNodes().size(),
+                    5.0f,
+                    target.energy,
+                    target.phiResonance,
+                    (float) target.consciousness.getCoherence(),
+                    target.phase,
+                    target.spikeFlash,
+                    target.age
+            );
+            int[] outputs = target.brain.compute(inputs);
+            String decision = target.brain.interpretOutputs(outputs);
+            CommandTerminal.printSuccess(target.name + " thinks: " + decision);
+            CommandTerminal.print("  Inputs: " + java.util.Arrays.toString(inputs));
+            CommandTerminal.print("  Outputs: " + java.util.Arrays.toString(outputs));
+        } else if (sub.equals("mutate")) {
+            target.adaptiveEngine.beginTrial(target.brain);
+            CommandTerminal.printSuccess("Mutation trial started for " + target.name);
+            CommandTerminal.print("  Ticks remaining: " + target.adaptiveEngine.getTrialTicksRemaining());
+        } else {
+            CommandTerminal.printError("Unknown subcommand: " + sub);
+            CommandTerminal.print("Use: brain <entity> | brain <entity> think | brain <entity> mutate");
+        }
+    }
+
     private PhiNode findNode(String name) {
         for (PhiNode node : world.getNodes()) {
             if (node.name.equalsIgnoreCase(name)) {
@@ -1229,10 +1304,33 @@ public class ExperimentManager {
     public float getGravityForce() { return gravityForce; }
     public float getSpeedMultiplier() { return speedMultiplier; }
     
+    private void initOllama() {
+        // Try local first
+        ollama = new OllamaIntegration(false);
+        if (ollama.testConnection()) {
+            useCloudOllama = false;
+            System.out.println("[Ollama] Connected to LOCAL (localhost:11434)");
+            return;
+        }
+        
+        // Fallback to cloud
+        ollama = new OllamaIntegration(true);
+        if (ollama.testConnection()) {
+            useCloudOllama = true;
+            currentModel = "qwen3-coder-next";
+            System.out.println("[Ollama] Connected to CLOUD");
+            return;
+        }
+        
+        // Neither works - keep local reference but warn
+        ollama = new OllamaIntegration(false);
+        useCloudOllama = false;
+        System.out.println("[Ollama] No connection available. Start 'ollama serve' for local mode.");
+    }
+
     public void runOllama(String args) {
         if (ollama == null) {
-            CommandTerminal.printError("Ollama not initialized. Check connection.");
-            return;
+            initOllama();
         }
         String[] parts = args.trim().split("\\s+", 2);
         String sub = parts.length > 0 ? parts[0].toLowerCase() : "";

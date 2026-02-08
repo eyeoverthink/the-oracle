@@ -64,4 +64,5 @@ jar {
 
 run {
     jvmArgs = ['-Djava.awt.headless=false']
+    workingDir = projectDir
 }

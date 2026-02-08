@@ -1,7 +1,13 @@
-package fraymus;
+package fraymus.quantum.brain;
 
 import java.util.Random;
 
+/**
+ * Logic Gate - Basic computational unit for neural circuits
+ * 
+ * Supports 4 gate types: AND, OR, XOR, NAND
+ * Each gate takes 2 inputs from an 8-sensor array
+ */
 public class LogicGate {
     public static final int AND = 0;
     public static final int OR = 1;
@@ -59,11 +65,11 @@ public class LogicGate {
     public String getTypeName() {
         return GATE_NAMES[type];
     }
-
+    
     public String encode() {
         return type + ":" + in1 + ":" + in2;
     }
-
+    
     public static LogicGate decode(String encoded) {
         String[] parts = encoded.split(":");
         if (parts.length != 3) return random();

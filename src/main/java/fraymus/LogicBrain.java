@@ -160,6 +160,25 @@ public class LogicBrain {
         return gates.size();
     }
 
+    public String encode() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < gates.size(); i++) {
+            sb.append(gates.get(i).encode());
+            if (i < gates.size() - 1) sb.append("|");
+        }
+        return sb.toString();
+    }
+
+    public static LogicBrain decode(String encoded) {
+        if (encoded == null || encoded.isEmpty()) return new LogicBrain();
+        String[] parts = encoded.split("\\|");
+        List<LogicGate> gateList = new ArrayList<>();
+        for (String part : parts) {
+            gateList.add(LogicGate.decode(part));
+        }
+        return new LogicBrain(gateList);
+    }
+
     @Override
     public String toString() {
         return String.format("Brain[%d gates, thinks=%d, decision=%s]", gates.size(), thinkCount, lastDecision);

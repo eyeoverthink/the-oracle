@@ -274,6 +274,10 @@ public class InfiniteMemory {
         return records.size();
     }
 
+    public MemoryConfig getConfig() {
+        return config;
+    }
+
     public int getTotalRecordsEver() {
         return totalRecordsEver;
     }

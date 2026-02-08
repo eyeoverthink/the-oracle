@@ -100,8 +100,11 @@ public class KnowledgeScraper {
         if (!Files.exists(path)) {
             path = Paths.get("attached_assets", filepath);
             if (!Files.exists(path)) {
-                CommandTerminal.printError("File not found: " + filepath);
-                return;
+                path = Paths.get("d:/Zip And Send/Java-Memory/Asset-Manager/attached_assets", filepath);
+                if (!Files.exists(path)) {
+                    CommandTerminal.printError("File not found: " + filepath);
+                    return;
+                }
             }
         }
 
@@ -134,9 +137,19 @@ public class KnowledgeScraper {
             try {
                 Path assetsDir = Paths.get("attached_assets");
                 if (!Files.exists(assetsDir)) {
-                    CommandTerminal.printError("No attached_assets directory found");
-                    return;
+                    // Try absolute path as fallback
+                    assetsDir = Paths.get(System.getProperty("user.dir"), "attached_assets");
+                    if (!Files.exists(assetsDir)) {
+                        // Try one more fallback - project root
+                        assetsDir = Paths.get("d:/Zip And Send/Java-Memory/Asset-Manager/attached_assets");
+                        if (!Files.exists(assetsDir)) {
+                            CommandTerminal.printError("No attached_assets directory found");
+                            CommandTerminal.print("  Searched: ./attached_assets, " + System.getProperty("user.dir"));
+                            return;
+                        }
+                    }
                 }
+                CommandTerminal.print("  Using: " + assetsDir.toAbsolutePath());
 
                 List<Path> files;
                 try (var stream = Files.list(assetsDir)) {
