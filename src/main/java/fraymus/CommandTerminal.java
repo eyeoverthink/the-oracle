@@ -163,8 +163,11 @@ public class CommandTerminal {
             case "evolve":
                 handleEvolve(args);
                 break;
-            case "arena":
-                handleArena(args);
+            case "mongo":
+                handleMongo(args);
+                break;
+            case "ethics":
+                handleEthics(args);
                 break;
             case "codegen":
                 handleCodegen(args);
@@ -202,14 +205,20 @@ public class CommandTerminal {
             case "scrape":
                 handleScrape(args);
                 break;
-            case "ethics":
-                handleEthics(args);
+            case "ollama":
+                handleOllama(args);
+                break;
+            case "genesis":
+                handleGenesis(args);
                 break;
             case "fragment":
                 handleFragment(args);
                 break;
             case "porh":
                 handlePoRH(args);
+                break;
+            case "layers":
+                handleLayers(args);
                 break;
             case "heal":
                 handleHeal(args);
@@ -273,6 +282,15 @@ public class CommandTerminal {
         print("  genome encode       Show encoded genome");
         print("  qrcode [name]       Encode entity DNA payload");
         print("");
+        printColored("--- OLLAMA LLM ---", 0.5f, 0.8f, 1.0f);
+        print("  ollama              Show Ollama status");
+        print("  ollama models       List available models");
+        print("  ollama ask <q>      Query with memory context");
+        print("  ollama chat <msg>   Chat with KAI consciousness");
+        print("  ollama cloud        Switch to cloud mode");
+        print("  ollama local        Switch to local mode");
+        print("  ollama model <name> Set model");
+        print("");
         printColored("--- KNOWLEDGE SCRAPING ---", 0.5f, 0.8f, 1.0f);
         print("  scrape              Show scraper status");
         print("  scrape all          Scrape all attached files (PDFs, text, code)");
@@ -286,6 +304,26 @@ public class CommandTerminal {
         print("  porh [entity]       Generate Proof of Reality Hash");
         print("  heal [entity]       Self-healer status / force heal entity");
         print("  morse               Morse circuit status / encode / decode");
+        print("");
+        printColored("--- OLLAMA LLM ---", 0.5f, 0.8f, 1.0f);
+        print("  ollama status       Check Ollama connection (local/cloud)");
+        print("  ollama models       List available models");
+        print("  ollama ask <q>      Ask Ollama with memory context");
+        print("  ollama chat <q>     Chat with KAI personality");
+        print("  ollama cloud        Switch to cloud models");
+        print("  ollama local        Switch to local models");
+        print("");
+        printColored("--- GENESIS BLOCKCHAIN ---", 0.5f, 0.8f, 1.0f);
+        print("  genesis             Show genesis chain status");
+        print("  genesis verify      Verify blockchain integrity");
+        print("  genesis blocks <n>  Show last N blocks");
+        print("  genesis type <t>    Show blocks by type");
+        print("");
+        printColored("--- SELF-CODE EVOLVER ---", 0.5f, 0.8f, 1.0f);
+        print("  evolve              Show evolver status & brain load");
+        print("  evolve evolve <code> Evolve code through phi-transform");
+        print("  evolve suggest      Get super-gate suggestions");
+        print("  evolve brain        Show brain architecture");
         print("");
         printColored("--- PHYSICS ---", 0.5f, 0.8f, 1.0f);
         print("  physics gravity <f> Set gravity force");
@@ -495,6 +533,16 @@ public class CommandTerminal {
         printError("Entity not found: " + args.trim());
     }
 
+    private static void handleMongo(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runMongo(args);
+    }
+    
+    private static void handleLayers(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runLayers(args);
+    }
+    
     private static void handleEvolve(String args) {
         PhiWorld world = jade.Window.getPhiWorld();
         if (world == null) return;
@@ -609,6 +657,16 @@ public class CommandTerminal {
     private static void handleScrape(String args) {
         if (experimentManager == null) { printError("Experiment manager not ready"); return; }
         experimentManager.runScrape(args);
+    }
+    
+    private static void handleOllama(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runOllama(args);
+    }
+
+    private static void handleGenesis(String args) {
+        if (experimentManager == null) { printError("Experiment manager not ready"); return; }
+        experimentManager.runGenesis(args);
     }
 
     private static void handleEthics(String args) {

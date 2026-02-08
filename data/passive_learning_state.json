@@ -1,7 +1,7 @@
 {
-  "passive_cycles": 9480,
-  "learned_patterns": 1772,
-  "pattern_strength": 0.185165,
-  "integration_level": 0.948000,
-  "last_cycle_time": 1770356433870
+  "passive_cycles": 16906,
+  "learned_patterns": 5719,
+  "pattern_strength": 0.326401,
+  "integration_level": 1.000000,
+  "last_cycle_time": 1770503145394
 }
