@@ -225,8 +225,8 @@ public class PassiveLearner {
     }
 
     private void saveTensor() {
-        String filename = String.format("phi_patterns_%d.dat", System.currentTimeMillis());
-        Path file = dataDir.resolve(filename);
+        // Use single file instead of timestamped files to prevent accumulation
+        Path file = dataDir.resolve("phi_patterns_current.dat");
         try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(file)))) {
             dos.writeInt(DIM_A);
             dos.writeInt(DIM_B);
@@ -246,19 +246,33 @@ public class PassiveLearner {
     }
 
     private void loadLatestTensor() {
-        try {
-            List<Path> datFiles = Files.list(dataDir)
-                    .filter(p -> p.getFileName().toString().startsWith("phi_patterns_") &&
-                            p.getFileName().toString().endsWith(".dat"))
-                    .sorted()
-                    .collect(java.util.stream.Collectors.toList());
+        // First try current file, then fall back to legacy timestamped files
+        Path currentFile = dataDir.resolve("phi_patterns_current.dat");
+        Path latest = currentFile;
+        
+        if (!Files.exists(currentFile)) {
+            try {
+                List<Path> datFiles = Files.list(dataDir)
+                        .filter(p -> p.getFileName().toString().startsWith("phi_patterns_") &&
+                                p.getFileName().toString().endsWith(".dat"))
+                        .sorted()
+                        .collect(java.util.stream.Collectors.toList());
 
-            if (datFiles.isEmpty()) {
+                if (datFiles.isEmpty()) {
+                    initializeTensor();
+                    cleanupOldPatternFiles(); // Clean up any orphaned files
+                    return;
+                }
+                latest = datFiles.get(datFiles.size() - 1);
+                // Cleanup old files after loading
+                cleanupOldPatternFiles();
+            } catch (IOException e) {
                 initializeTensor();
                 return;
             }
-
-            Path latest = datFiles.get(datFiles.size() - 1);
+        }
+        
+        try {
             try (DataInputStream dis = new DataInputStream(new BufferedInputStream(Files.newInputStream(latest)))) {
                 int a = dis.readInt();
                 int b = dis.readInt();
@@ -278,6 +292,35 @@ public class PassiveLearner {
             }
         } catch (IOException e) {
             initializeTensor();
+        }
+    }
+
+    private void cleanupOldPatternFiles() {
+        // Delete old timestamped phi_patterns files to prevent disk bloat
+        try {
+            List<Path> oldFiles = Files.list(dataDir)
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        return name.startsWith("phi_patterns_") && 
+                               name.endsWith(".dat") && 
+                               !name.equals("phi_patterns_current.dat");
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            
+            int deleted = 0;
+            for (Path old : oldFiles) {
+                try {
+                    Files.delete(old);
+                    deleted++;
+                } catch (IOException e) {
+                    // Ignore individual file delete failures
+                }
+            }
+            if (deleted > 0) {
+                System.out.printf("[PassiveLearner] Cleaned up %d old pattern files%n", deleted);
+            }
+        } catch (IOException e) {
+            // Ignore cleanup failures
         }
     }
 

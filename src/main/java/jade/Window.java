@@ -29,6 +29,7 @@ public class Window {
     private PhiNeuralNet neuralNet;
     private QRGenome qrGenome;
     private KnowledgeScraper knowledgeScraper;
+    private SelfCodeEvolver selfCodeEvolver;
 
     private static Window window = null;
 
@@ -195,6 +196,8 @@ public class Window {
 
         knowledgeScraper = new KnowledgeScraper(infiniteMemory, passiveLearner, neuralNet);
         neuralNet.setScraper(knowledgeScraper);
+        
+        selfCodeEvolver = new SelfCodeEvolver(passiveLearner, infiniteMemory);
 
         experimentManager = new ExperimentManager(phiWorld, infiniteMemory, passiveLearner, neuralNet, qrGenome, knowledgeScraper);
         CommandTerminal.init(experimentManager);
@@ -323,6 +326,10 @@ public class Window {
 
     public static KnowledgeScraper getKnowledgeScraper() {
         return get().knowledgeScraper;
+    }
+    
+    public static SelfCodeEvolver getSelfCodeEvolver() {
+        return get().selfCodeEvolver;
     }
 
     public void setWidth(int width) {

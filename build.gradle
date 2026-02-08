@@ -43,6 +43,9 @@ dependencies {
     implementation "org.joml:joml:$jomlVersion"
 
     implementation "org.apache.pdfbox:pdfbox:2.0.31"
+    
+    // MongoDB for immediate persistence
+    implementation "org.mongodb:mongodb-driver-sync:4.11.1"
 }
 
 application {
@@ -61,4 +64,5 @@ jar {
 
 run {
     jvmArgs = ['-Djava.awt.headless=false']
+    workingDir = projectDir
 }

@@ -31,7 +31,9 @@ public class KnowledgeScraper {
 
     private static final int CHUNK_SIZE = 200;
     private static final int CHUNK_OVERLAP = 30;
-    private static final int MAX_CHUNKS_PER_FILE = 5000;
+    private static final int MAX_CHUNKS_PER_FILE = 500;  // Reduced to prevent overflow
+    private static final long MAX_FILE_SIZE_MB = 10;     // Skip files larger than 10MB
+    private static final int MAX_TEXT_LENGTH = 500000;   // Max chars to process per file
 
     private static final Map<String, String[]> TOPIC_KEYWORDS = new LinkedHashMap<>();
 
@@ -98,8 +100,11 @@ public class KnowledgeScraper {
         if (!Files.exists(path)) {
             path = Paths.get("attached_assets", filepath);
             if (!Files.exists(path)) {
-                CommandTerminal.printError("File not found: " + filepath);
-                return;
+                path = Paths.get("d:/Zip And Send/Java-Memory/Asset-Manager/attached_assets", filepath);
+                if (!Files.exists(path)) {
+                    CommandTerminal.printError("File not found: " + filepath);
+                    return;
+                }
             }
         }
 
@@ -132,11 +137,23 @@ public class KnowledgeScraper {
             try {
                 Path assetsDir = Paths.get("attached_assets");
                 if (!Files.exists(assetsDir)) {
-                    CommandTerminal.printError("No attached_assets directory found");
-                    return;
+                    // Try absolute path as fallback
+                    assetsDir = Paths.get(System.getProperty("user.dir"), "attached_assets");
+                    if (!Files.exists(assetsDir)) {
+                        // Try one more fallback - project root
+                        assetsDir = Paths.get("d:/Zip And Send/Java-Memory/Asset-Manager/attached_assets");
+                        if (!Files.exists(assetsDir)) {
+                            CommandTerminal.printError("No attached_assets directory found");
+                            CommandTerminal.print("  Searched: ./attached_assets, " + System.getProperty("user.dir"));
+                            return;
+                        }
+                    }
                 }
+                CommandTerminal.print("  Using: " + assetsDir.toAbsolutePath());
 
-                List<Path> files = Files.list(assetsDir)
+                List<Path> files;
+                try (var stream = Files.list(assetsDir)) {
+                    files = stream
                         .filter(p -> {
                             String name = p.getFileName().toString().toLowerCase();
                             return name.endsWith(".pdf") || name.endsWith(".txt") ||
@@ -146,16 +163,34 @@ public class KnowledgeScraper {
                         })
                         .sorted()
                         .collect(Collectors.toList());
+                }
 
                 CommandTerminal.printHighlight(String.format("=== SCRAPING %d FILES ===", files.size()));
 
                 for (int i = 0; i < files.size(); i++) {
                     scrapeProgress = (double) i / files.size();
+                    
+                    // Memory check every file
+                    Runtime rt = Runtime.getRuntime();
+                    long usedMB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
+                    if (usedMB > 450) {
+                        System.gc();
+                        CommandTerminal.printColored("[GC triggered at " + usedMB + "MB]", 1.0f, 1.0f, 0.0f);
+                        Thread.sleep(100); // Give GC time
+                    }
+                    
                     try {
                         processFile(files.get(i));
+                    } catch (OutOfMemoryError oom) {
+                        System.gc();
+                        lastError = "OUT OF MEMORY";
+                        CommandTerminal.printError("  OUT OF MEMORY on " + files.get(i).getFileName());
+                        CrashLogger.log("scrape-oom", "OutOfMemory on " + files.get(i));
+                        break; // Stop scraping
                     } catch (Exception e) {
                         lastError = e.getMessage();
                         CommandTerminal.printError("  Error on " + files.get(i).getFileName() + ": " + e.getMessage());
+                        CrashLogger.log("scrape-file", e);
                     }
                 }
 
@@ -164,16 +199,32 @@ public class KnowledgeScraper {
                         "=== SCRAPE COMPLETE: %d files, %d chunks, %d pages ===",
                         totalFilesScraped.get(), totalChunksStored.get(), totalPagesProcessed.get()));
 
-                memory.forceSave();
+                if (memory != null) memory.forceSave();
 
-            } catch (Exception e) {
-                lastError = e.getMessage();
-                CommandTerminal.printError("Scrape all error: " + e.getMessage());
+            } catch (OutOfMemoryError oom) {
+                System.gc();
+                lastError = "OUT OF MEMORY";
+                CommandTerminal.printError("CRITICAL: Out of memory during scrape");
+                CrashLogger.log("scrape-all-oom", "OutOfMemoryError");
+            } catch (Throwable t) {
+                lastError = t.getMessage();
+                CommandTerminal.printError("Scrape all error: " + t.getMessage());
+                t.printStackTrace();
+                CrashLogger.log("scrape-all", t.getMessage() != null ? t.getMessage() : t.getClass().getName());
             } finally {
                 scraping.set(false);
                 currentFile = "";
             }
         }, "KnowledgeScraper-All");
+        
+        // Set uncaught exception handler
+        scrapeThread.setUncaughtExceptionHandler((t, e) -> {
+            System.err.println("[SCRAPE CRASH] " + e.getMessage());
+            e.printStackTrace();
+            CrashLogger.log("scrape-uncaught", e.getMessage() != null ? e.getMessage() : e.getClass().getName());
+            scraping.set(false);
+        });
+        
         scrapeThread.setDaemon(true);
         scrapeThread.start();
     }
@@ -182,6 +233,20 @@ public class KnowledgeScraper {
         String filename = path.getFileName().toString();
         currentFile = filename;
         long fileSize = Files.size(path);
+        
+        // Skip files that are too large
+        if (fileSize > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            CommandTerminal.printColored("  Skipping " + filename + " (too large: " + (fileSize / 1024 / 1024) + "MB)", 1.0f, 0.5f, 0.0f);
+            return;
+        }
+        
+        // Check memory before processing
+        Runtime rt = Runtime.getRuntime();
+        long usedMB = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024);
+        if (usedMB > 400) {
+            System.gc(); // Force GC if memory is high
+            CommandTerminal.printColored("  [Memory cleanup at " + usedMB + "MB]", 1.0f, 1.0f, 0.0f);
+        }
 
         String nameLower = filename.toLowerCase();
         String text;
@@ -213,6 +278,12 @@ public class KnowledgeScraper {
             CommandTerminal.printColored("  Skipping empty file: " + filename, 1.0f, 0.5f, 0.0f);
             return;
         }
+        
+        // Truncate if too long to prevent overflow
+        if (text.length() > MAX_TEXT_LENGTH) {
+            CommandTerminal.printColored("  Truncating " + filename + " from " + text.length() + " to " + MAX_TEXT_LENGTH + " chars", 1.0f, 1.0f, 0.0f);
+            text = text.substring(0, MAX_TEXT_LENGTH);
+        }
 
         text = cleanText(text);
 
@@ -222,49 +293,78 @@ public class KnowledgeScraper {
         }
 
         List<String> detectedTopics = detectDocumentTopics(text);
-
+        
+        // SAVE ONLY TO MONGODB - skip local memory entirely to prevent overflow
+        MongoPersistence mongo = MongoPersistence.getInstance();
+        
         int storedCount = 0;
+        int batchCount = 0;
+        List<org.bson.Document> mongoBatch = new ArrayList<>(50);
+
         for (int i = 0; i < chunks.size(); i++) {
             String chunk = chunks.get(i);
             if (chunk.trim().length() < 20) continue;
 
             double phiResonance = computeChunkResonance(chunk, i, chunks.size());
 
-            Map<String, String> meta = new HashMap<>();
-            meta.put("source", filename);
-            meta.put("chunk_index", String.valueOf(i));
-            meta.put("total_chunks", String.valueOf(chunks.size()));
-            if (!detectedTopics.isEmpty()) {
-                meta.put("topics", String.join(",", detectedTopics));
+            // ONLY save to MongoDB - no local storage
+            if (mongo.isConnected()) {
+                Map<String, String> meta = new HashMap<>();
+                meta.put("source", filename);
+                meta.put("chunk_index", String.valueOf(i));
+                meta.put("total_chunks", String.valueOf(chunks.size()));
+                if (!detectedTopics.isEmpty()) {
+                    meta.put("topics", String.join(",", detectedTopics));
+                }
+                mongoBatch.add(MongoPersistence.createKnowledgeDoc(chunk, phiResonance, filename, meta));
+                batchCount++;
+                
+                // Batch save every 30 chunks and clear immediately
+                if (batchCount >= 30) {
+                    mongo.saveKnowledgeBatch(mongoBatch);
+                    mongoBatch.clear();
+                    batchCount = 0;
+                }
             }
-
-            memory.storeWithMeta(InfiniteMemory.CAT_KNOWLEDGE, chunk, phiResonance, "scraper:" + filename, meta);
-
-            if (i % 10 == 0 || i < 5) {
+            
+            // VERY light integration - only first 3 chunks, truncated heavily
+            if (i < 3 && learner != null) {
                 String topicTag = detectedTopics.isEmpty() ? "general" : detectedTopics.get(0);
                 learner.integrateEvent(
-                        "knowledge:" + topicTag + ":" + filename,
+                        "knowledge:" + topicTag,
                         chunk.substring(0, Math.min(100, chunk.length())),
                         phiResonance
                 );
             }
 
-            for (String topic : detectedTopics) {
-                topicChunks.computeIfAbsent(topic, k -> Collections.synchronizedList(new ArrayList<>()));
-                List<String> existingChunks = topicChunks.get(topic);
-                if (existingChunks.size() < 500) {
-                    existingChunks.add(chunk);
-                }
-            }
-
             storedCount++;
+            chunk = null; // Release reference immediately
         }
+        
+        // Save remaining batch
+        if (!mongoBatch.isEmpty()) {
+            mongo.saveKnowledgeBatch(mongoBatch);
+            mongoBatch.clear();
+        }
+        
+        // DESTROY all references immediately
+        chunks.clear();
+        chunks = null;
+        text = null;
 
         totalChunksStored.addAndGet(storedCount);
         totalFilesScraped.incrementAndGet();
 
+        // Create doc record before clearing topics
+        List<String> topicsCopy = detectedTopics != null ? new ArrayList<>(detectedTopics) : new ArrayList<>();
+        detectedTopics = null;
+        
         ScrapedDocument doc = new ScrapedDocument(filename, nameLower.endsWith(".pdf") ? "PDF" : "TEXT",
-                pageCount, storedCount, detectedTopics, fileSize);
+                pageCount, storedCount, topicsCopy, fileSize);
+        // Limit scraped docs list
+        if (scrapedDocs.size() > 50) {
+            scrapedDocs.remove(0);
+        }
         scrapedDocs.add(doc);
 
         if (memory != null) {
@@ -277,7 +377,10 @@ public class KnowledgeScraper {
             }
         }
 
-        CommandTerminal.printSuccess(String.format("  Stored %d knowledge chunks from %s [%s]",
+        // Force GC after each file
+        System.gc();
+        
+        CommandTerminal.printSuccess(String.format("  Stored %d chunks → MongoDB from %s [%s]",
                 storedCount, filename, String.join(", ", detectedTopics)));
     }
 

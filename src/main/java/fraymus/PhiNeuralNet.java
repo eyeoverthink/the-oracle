@@ -287,6 +287,42 @@ public class PhiNeuralNet {
 
         return null;
     }
+    
+    /**
+     * Learn code patterns from scraped content - feeds into code arena knowledge
+     */
+    public void learnFromCode(String codeChunk, double resonance) {
+        if (codeChunk == null || codeChunk.isEmpty()) return;
+        
+        // Extract code patterns
+        String lower = codeChunk.toLowerCase();
+        
+        // Detect programming constructs
+        List<String> patterns = new ArrayList<>();
+        if (lower.contains("def ") || lower.contains("function")) patterns.add("function_definition");
+        if (lower.contains("class ")) patterns.add("class_definition");
+        if (lower.contains("import ") || lower.contains("from ")) patterns.add("import_statement");
+        if (lower.contains("for ") || lower.contains("while ")) patterns.add("loop_construct");
+        if (lower.contains("if ") || lower.contains("else")) patterns.add("conditional");
+        if (lower.contains("return ")) patterns.add("return_statement");
+        if (lower.contains("try") || lower.contains("except") || lower.contains("catch")) patterns.add("error_handling");
+        if (lower.contains("async") || lower.contains("await")) patterns.add("async_pattern");
+        if (lower.contains("lambda") || lower.contains("->")) patterns.add("lambda_expression");
+        if (lower.contains("self.") || lower.contains("this.")) patterns.add("object_reference");
+        
+        // Feed patterns to passive learner with boosted resonance for code
+        double codeBoost = resonance * PHI; // Boost code learning
+        for (String pattern : patterns) {
+            learner.integrateEvent("code_pattern:" + pattern, codeChunk.substring(0, Math.min(200, codeChunk.length())), codeBoost);
+        }
+        
+        // Store in memory for code arena access
+        if (memory != null && !patterns.isEmpty()) {
+            memory.store(InfiniteMemory.CAT_KNOWLEDGE, 
+                "CODE:" + String.join(",", patterns) + "|" + codeChunk.substring(0, Math.min(150, codeChunk.length())),
+                codeBoost);
+        }
+    }
 
     public int getQueriesProcessed() { return queriesProcessed; }
     public int getPatternsMatched() { return patternsMatched; }

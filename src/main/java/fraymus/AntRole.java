@@ -90,6 +90,33 @@ public enum AntRole {
     public String generateCodeFragment(PhiNode node) {
         if (codeTemplates.length == 0) return "";
 
+        // Try self-evolving code 20% of the time
+        SelfCodeEvolver evolver = jade.Window.getSelfCodeEvolver();
+        if (evolver != null && rng.nextDouble() < 0.2) {
+            int idx = Math.abs(node.signature.hashCode()) % codeTemplates.length;
+            String baseTemplate = codeTemplates[idx];
+            
+            SelfCodeEvolver.EvolutionResult evolved = evolver.replicateAndImprove(baseTemplate);
+            if (evolved.resurrectionReady && evolved.phiIntegrity > 0.5) {
+                return "// φ-EVOLVED [" + evolved.corticalRegion + "] integrity=" + 
+                       String.format("%.3f", evolved.phiIntegrity) + "\n" + evolved.evolvedSource;
+            }
+        }
+
+        // Try to use scraped knowledge 30% of the time
+        KnowledgeScraper scraper = jade.Window.getKnowledgeScraper();
+        if (scraper != null && rng.nextDouble() < 0.3) {
+            String topic = getPreferredTopic();
+            String knowledge = scraper.queryKnowledge(topic);
+            if (knowledge != null && knowledge.length() > 50) {
+                // Extract code-like patterns from scraped knowledge
+                String extracted = extractCodePattern(knowledge);
+                if (extracted != null && extracted.length() > 20) {
+                    return "// From scraped knowledge: " + topic + "\n" + extracted;
+                }
+            }
+        }
+
         int idx = Math.abs(node.signature.hashCode() + node.age) % codeTemplates.length;
         String template = codeTemplates[idx];
 
@@ -102,6 +129,50 @@ public enum AntRole {
         }
 
         return template;
+    }
+    
+    private String getPreferredTopic() {
+        switch (this) {
+            case LOGIC_GATE: return "programming";
+            case MATH_PROCESSOR: return "mathematics";
+            case CIRCUIT_BUILDER: return "programming";
+            case MEMORY_KEEPER: return "programming";
+            case COMMUNICATOR: return "programming";
+            default: return "programming";
+        }
+    }
+    
+    private String extractCodePattern(String knowledge) {
+        // Look for function definitions, class definitions, or code blocks
+        String[] lines = knowledge.split("\n");
+        StringBuilder code = new StringBuilder();
+        boolean inCodeBlock = false;
+        int linesAdded = 0;
+        
+        for (String line : lines) {
+            String trimmed = line.trim();
+            
+            // Detect code patterns
+            if (trimmed.startsWith("def ") || trimmed.startsWith("class ") || 
+                trimmed.startsWith("public ") || trimmed.startsWith("private ") ||
+                trimmed.startsWith("function ") || trimmed.contains("=>") ||
+                trimmed.matches("^[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(.*\\).*")) {
+                inCodeBlock = true;
+            }
+            
+            if (inCodeBlock) {
+                code.append(line).append("\n");
+                linesAdded++;
+                
+                // Stop after reasonable amount
+                if (linesAdded > 10 || (trimmed.isEmpty() && linesAdded > 3)) {
+                    break;
+                }
+            }
+        }
+        
+        String result = code.toString().trim();
+        return result.length() > 20 ? result : null;
     }
 
     public static AntRole assignFromFrequency(float frequency) {

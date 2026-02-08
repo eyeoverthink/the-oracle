@@ -125,6 +125,11 @@ public class InfiniteMemory {
     private long lastSaveTime = 0;
     private static final int SAVE_INTERVAL_MS = 30000;
     private boolean dirty = false;
+    
+    // MongoDB backend for cloud persistence
+    private MemoryConfig config;
+    private MongoMemoryBackend mongoBackend;
+    private static final int MAX_IN_MEMORY_RECORDS = 5000; // Limit to prevent overflow
 
     public InfiniteMemory() {
         Path dataDir = Paths.get("data");
@@ -134,11 +139,67 @@ public class InfiniteMemory {
             System.err.println("[InfiniteMemory] Cannot create data directory: " + e.getMessage());
         }
         this.storageFile = dataDir.resolve("infinite_memory.dat");
+        
+        // Load config and initialize MongoDB if configured
+        this.config = new MemoryConfig();
+        initMongoBackend();
+        
         loadFromFile();
+    }
+    
+    private void initMongoBackend() {
+        if (config.getBackendType() == MemoryConfig.BackendType.MONGODB ||
+            config.getBackendType() == MemoryConfig.BackendType.HYBRID) {
+            if (config.isMongoConfigured()) {
+                try {
+                    mongoBackend = new MongoMemoryBackend(
+                        config.getMongoConnectionString(),
+                        config.getMongoDatabaseName()
+                    );
+                    System.out.println("[InfiniteMemory] MongoDB backend initialized");
+                } catch (Exception e) {
+                    System.err.println("[InfiniteMemory] MongoDB init failed: " + e.getMessage());
+                    mongoBackend = null;
+                }
+            }
+        }
+    }
+    
+    public void connectMongo(String connectionString) {
+        config.setMongoConnectionString(connectionString);
+        config.setBackendType(MemoryConfig.BackendType.HYBRID);
+        try {
+            if (mongoBackend != null) mongoBackend.shutdown();
+            mongoBackend = new MongoMemoryBackend(connectionString, config.getMongoDatabaseName());
+            System.out.println("[InfiniteMemory] MongoDB connected!");
+        } catch (Exception e) {
+            System.err.println("[InfiniteMemory] MongoDB connect failed: " + e.getMessage());
+        }
+    }
+    
+    public boolean isMongoConnected() {
+        return mongoBackend != null && mongoBackend.isConnected();
     }
 
     public MemoryRecord store(String category, String content, double phiResonance, String entityName) {
         MemoryRecord record = new MemoryRecord(category, content, phiResonance, entityName);
+        
+        // Save to MongoDB first (cloud backup)
+        if (mongoBackend != null && mongoBackend.isConnected()) {
+            mongoBackend.storeRecord(record);
+        }
+        
+        // Limit in-memory records to prevent overflow
+        if (records.size() >= MAX_IN_MEMORY_RECORDS) {
+            // Remove oldest 20% when limit reached
+            int toRemove = MAX_IN_MEMORY_RECORDS / 5;
+            for (int i = 0; i < toRemove && !records.isEmpty(); i++) {
+                records.remove(0);
+            }
+            rebuildCategoryIndex();
+            System.gc(); // Force garbage collection
+        }
+        
         int idx = records.size();
         records.add(record);
         categoryIndex.computeIfAbsent(category, k -> Collections.synchronizedList(new ArrayList<>())).add(idx);
@@ -146,6 +207,14 @@ public class InfiniteMemory {
         dirty = true;
         autoSave();
         return record;
+    }
+    
+    private void rebuildCategoryIndex() {
+        categoryIndex.clear();
+        for (int i = 0; i < records.size(); i++) {
+            MemoryRecord r = records.get(i);
+            categoryIndex.computeIfAbsent(r.category, k -> Collections.synchronizedList(new ArrayList<>())).add(i);
+        }
     }
 
     public MemoryRecord store(String category, String content, double phiResonance) {
@@ -203,6 +272,10 @@ public class InfiniteMemory {
 
     public int getRecordCount() {
         return records.size();
+    }
+
+    public MemoryConfig getConfig() {
+        return config;
     }
 
     public int getTotalRecordsEver() {
